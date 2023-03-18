@@ -18,6 +18,19 @@ typedef struct {
     int size;
 } SynthesizerArray;
 
+typedef struct {
+    char* description;
+    void (function*)(SynthesizerArray list);
+} MenuItem;
+
+const MenuItem menu_items[] = {
+    {"Vypsat data"},
+    {"Seradit podle jmena"},
+    {"Seradit podle roku vydani"},
+    {"Vypsat pocet modelu urcite znacky"},
+    {"Najit nejstarsi syntezator"},
+};
+
 SynthesizerArray load(FILE* input) 
 {
     SynthesizerArray array;
