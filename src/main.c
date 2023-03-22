@@ -50,7 +50,7 @@ void clearBuffer(void)
 void waitForClick(void)
 {
     clearBuffer();
-    puts("zmackni enter pro pokracovani");
+    puts("Zmackni enter pro pokracovani");
     getchar();
 }
 
@@ -78,7 +78,7 @@ SynthesizerArray load(FILE* input)
             array.capacity += 16;
             new = realloc(array.array, array.capacity * sizeof(Synthesizer));
             if (new == NULL) {
-                // ERROR
+                error("Doslo misto v pameti!");
                 return array;
             }
             array.array = new;
@@ -118,6 +118,7 @@ void write(FILE* output, SynthesizerArray array, char* format)
 void printHead()
 {
     puts(
+        "+----+-----------------+-----------------+------------+------------------+-----------+"
         "| ID | Model           | Vyrobce         | Rok vydani | Pocet oscilatoru | Analogovy |\n"
         "|----+-----------------+-----------------+------------+------------------+-----------|"
     );
@@ -288,7 +289,7 @@ void sortByName(SynthesizerArray* list)
 
 
 const int menu_items_count = 6;
-const MenuItem menu_items[menu_items_count] = {
+const MenuItem menu_items[] = {
     {"Vypsat data", print},
     {"Seradit podle jmena", sortByName},
     {"Seradit podle roku vydani", sortByYear},
@@ -325,7 +326,12 @@ void menu(SynthesizerArray* list)
 
 int main(void) 
 {
-    FILE* file = fopen("data.txt", "r");
+    // TODO think of using cli args
+    char file_name[32];
+    printf("Zadej jmeno souboru: ");
+    scanf("%31s", file_name);
+    
+    FILE* file = fopen(file_name, "r");
     if (file == NULL) {
         return -1;
     }
@@ -339,7 +345,9 @@ int main(void)
     printf("Ulozit zmeny? y/n: ");
     scanf("%c", &save);
     if (save == 'y') {
-        FILE* file = fopen("data.txt", "w");
+        printf("Zadej jmeno souboru: ");
+        scanf("%31s", file_name);
+        FILE* file = fopen(file_name, "w");
         if (file == NULL) {
             free(list.array);
             return -1;
