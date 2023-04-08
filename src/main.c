@@ -29,8 +29,18 @@ typedef struct {
     int (*function)(SynthesizerArray* list);
 } MenuItem;
 
+typedef struct {
+    SynthesizerArray result;
+    int error;
+} SynthesizerArrayResult;
+
+typedef struct {
+    Synthesizer result;
+    int error;
+} SynthesizerResult;
+
 // Sort comparing function
-typedef bool (*Condition)(Synthesizer first, Synthesizer second);
+typedef int (*Condition)(Synthesizer first, Synthesizer second);
 
 const char errors[][64] = {
     "Nelze pridat prvek, v pameti je malo mista.",
@@ -44,7 +54,7 @@ const char errors[][64] = {
 // Outputs error message of given code
 void error(int code)
 {
-    printf("[ERROR] %s\n", errors[code]);
+    printf("[ERROR] %s\n", errors[code - 1]);
 }
 
 // Clears screen
@@ -72,7 +82,7 @@ void waitForClick(void)
 }
 
 // Loads data from file
-SynthesizerArray load(FILE* input, int* error)
+SynthesizerArrayResult load(FILE* input)
 {
     SynthesizerArray array;
     array.array = malloc(16 * sizeof(Synthesizer));
@@ -97,19 +107,17 @@ SynthesizerArray load(FILE* input, int* error)
             array.capacity += 16;
             new = realloc(array.array, array.capacity * sizeof(Synthesizer));
             if (new == NULL) {
-                *error = 4;
-                return array;
+                return (SynthesizerArrayResult) { array, 5 };
             }
             array.array = new;
         }
     }
 
-    if (loading_result != 6) {
-        *error = 5;
-        return array;
+    if (loading_result != -1) {
+        return (SynthesizerArrayResult) { array, 6 };
     }
 
-    return array;
+    return (SynthesizerArrayResult) { array, 0 };
 }
 
 // Copies one list to another
@@ -199,8 +207,35 @@ int addItem(SynthesizerArray* list)
     return 0;
 }
 
+SynthesizerArrayResult getManufacturerModels(SynthesizerArray list, char* manufacturer)
+{
+    SynthesizerArray result;
+    result.array = malloc(list.size * sizeof(Synthesizer));
+
+    if (result.array == NULL) {
+        return (SynthesizerArrayResult) { list, 3 };
+    }
+
+    int index;
+
+    for (index = 0; index < list.size; index++) {
+        if (strcmp(list.array[index].manufacturer, manufacturer) == 0) {
+            result.array[index] = list.array[index];
+        }
+    }
+
+    if (index < list.size) {
+        Synthesizer* new = realloc(result.array, index * sizeof(Synthesizer));
+        if (new == NULL) {
+            return (SynthesizerArrayResult) { result, 3 };
+        }
+        result.array = new; 
+    }
+
+    return (SynthesizerArrayResult) { result, 0 };
+}
+
 // Prints models from loaded manufacturer
-// TODO make separate functions
 int onlyManufacturerModels(SynthesizerArray* list)
 {
     char manufacturer[16];
@@ -210,31 +245,43 @@ int onlyManufacturerModels(SynthesizerArray* list)
     clear();
     printHead();
 
-    for (int index = 0; index < list->size; index++) {
-        if (strcmp(list->array[index].manufacturer, manufacturer) == 0) {
-            writeOne(stdout, PRETTY_FORMAT, list->array[index]);
+    SynthesizerArrayResult models = getManufacturerModels(*list, manufacturer);
+    if (models.error != 0) {
+        return models.error;
+    }
+    
+    write(stdout, models.result, PRETTY_FORMAT);
+
+    return 0;
+}
+
+SynthesizerResult getOldest(SynthesizerArray list)
+{
+    if (list.size == 0) {
+        return (SynthesizerResult) { .error = 2 };
+    }
+    Synthesizer oldest = list.array[0];
+    for (int index = 1; index < list.size; index++) {
+        if (list.array[index].year < oldest.year) {
+            oldest = list.array[index];
         }
     }
 
-    return 0;
+    return (SynthesizerResult) { oldest, 0 };
 }
 
 // Outputs oldest item
 // TODO separate
 int oldest(SynthesizerArray* list)
 {
-    if (list->size == 0) {
-        return NULL;
-    }
-    Synthesizer oldest = list->array[0];
-    for (int index = 1; index < list->size; index++) {
-        if (list->array[index].year < oldest.year) {
-            oldest = list->array[index];
-        }
+    SynthesizerResult result = getOldest(*list);
+    
+    if (result.error != -1) {
+        return result.error;
     }
 
     printHead();
-    writeOne(stdout, PRETTY_FORMAT, oldest);
+    writeOne(stdout, PRETTY_FORMAT, result.result);
     return 0;
 }
 
@@ -243,7 +290,7 @@ void melt(SynthesizerArray* list, SynthesizerArray* help, int from, int to, int 
 {
     int left = from, right = middle + 1, index = from;
     while (left <= middle && right <= to) {
-        if (compare(list->array[left], list->array[right])) {
+        if (compare(list->array[left], list->array[right]) <= 0) {
             help->array[index++] = list->array[left++];
         } else {
             help->array[index++] = list->array[right++];
@@ -292,15 +339,15 @@ int sort(SynthesizerArray* list, Condition condition)
 }
 
 // Sorting condition for smallest year
-bool byYearCondition(Synthesizer first, Synthesizer second)
+int byYearCondition(Synthesizer first, Synthesizer second)
 {
-    return first.year <= second.year;
+    return first.year - second.year;
 }
 
 // Sorting condition for alphabetic sorting
-bool byNameCondition(Synthesizer first, Synthesizer second)
+int byNameCondition(Synthesizer first, Synthesizer second)
 {
-    return strcmp(first.name, second.name) <= 0;
+    return strcmp(first.name, second.name);
 }
 
 // User interface for sorting
@@ -334,6 +381,25 @@ int sortByYear(SynthesizerArray* list)
 int sortByName(SynthesizerArray* list)
 {
     return sortDialogue(list, byNameCondition);
+}
+
+int binarySearch(SynthesizerArray list, int from, int to, Synthesizer key, Condition condition)
+{
+    if (from > to) {
+        return -1;
+    }
+
+    int middle = (to + from) / 2;
+
+    if (condition(list.array[middle], key) == 0) {
+        return middle;
+    }
+
+    if (condition(key, list.array[middle]) < 0) {
+        return binarySearch(list, from, middle - 1, key, condition);
+    }
+    
+    return binarySearch(list, middle + 1, to, key, condition);
 }
 
 
@@ -371,13 +437,13 @@ void menu(SynthesizerArray* list)
         }
 
         if (choice < 0 || choice > menu_items_count) {
-            error(errors[3]);
+            error(4);
             continue;
         }
 
         int code;
         if ((code = menu_items[choice - 1].function(list)) != 0) {
-            error(code - 1);
+            error(code);
         }
         waitForClick();
     } while (choice); // condition is redundant, but still...
@@ -395,13 +461,15 @@ int main(void)
     if (file == NULL) {
         return -1;
     }
-    int code = -1;
-    SynthesizerArray list = load(file, &code);
+    SynthesizerArrayResult loaded = load(file);
 
-    if (code > -1) {
-        error(code);
+    if (loaded.error != 0) {
+        error(loaded.error);
         waitForClick();
     }
+
+    SynthesizerArray list = loaded.result;
+
     fclose(file);
 
     menu(&list);
