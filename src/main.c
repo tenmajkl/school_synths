@@ -6,6 +6,10 @@
 #define DATA_FORMAT "%s|%s|%d|%d|%d\n"
 #define PRETTY_FORMAT "| %15s | %15s | %10d | %16d | %9d |\n"
 
+/**
+ * Structures 
+ */
+
 // Represents synth entity
 typedef struct {
     char name[16];
@@ -27,13 +31,23 @@ typedef struct {
 typedef struct {
     char* description;
     int (*function)(SynthesizerArray* list);
-} MenuItem;
+} action_t;
 
+/**
+ * Structure containing result of SynthesizerArray along with error code in case of error
+ *
+ * Basicaly cheap copy of rust Result
+ */
 typedef struct {
     SynthesizerArray result;
     int error;
 } SynthesizerArrayResult;
 
+/**
+ * Structure containing result of Synthesizer along with error code in case of error
+ *
+ * Basicaly cheap copy of rust Result
+ */
 typedef struct {
     Synthesizer *result;
     int error;
@@ -58,6 +72,12 @@ typedef struct {
     Condition condition;
 } SynthesizerField;
 
+/**
+ * Errors
+ *
+ * In order to make errors more consistent, they are assigned to codes.
+ */
+
 const char errors[][64] = {
     "Nelze pridat prvek, v pameti je malo mista.",
     "Pole je prazdne",
@@ -68,13 +88,23 @@ const char errors[][64] = {
     "Nepodarilo se najit prvek v poli"
 };
 
-// Outputs error message of given code
+/**
+ * Outputs error message of given code
+ *
+ * @param code Code of error from errors array
+ */
 void error(int code)
 {
     printf("[ERROR] %s\n", errors[code - 1]);
 }
 
-// Clears screen
+/**
+ * Helpers
+ */
+
+/**
+ * Clears screen depending on curent OS
+ */
 void clear(void)
 {
     #if defined __WIN32 || defined __WIN64
@@ -84,13 +114,17 @@ void clear(void)
     #endif
 }
 
-// Clears stdin buffer
+/**
+ * Clears buffer of stdin which is used when reading input
+ */
 void clearBuffer(void)
 {
     while ((getchar()) != '\n');
 }
 
-// Waits for user to press key
+/**
+ * Waits for user to click before new actions
+ */
 void waitForClick(void)
 {
     clearBuffer();
@@ -98,7 +132,15 @@ void waitForClick(void)
     getchar();
 }
 
-// Loads data from file
+/**
+ * Lists and structures
+ */
+
+/**
+ * Loads data from file to array
+ *
+ * Can return codes 5, 6, 0
+ */
 SynthesizerArrayResult load(FILE* input)
 {
     SynthesizerArray array;
@@ -137,7 +179,9 @@ SynthesizerArrayResult load(FILE* input)
     return (SynthesizerArrayResult) { array, 0 };
 }
 
-// Copies one list to another
+/**
+ * Copies one list to another
+ */
 SynthesizerArray copy(SynthesizerArray list)
 {
     SynthesizerArray result = list;
@@ -151,13 +195,21 @@ SynthesizerArray copy(SynthesizerArray list)
     return result;
 }
 
-// Outputs one item to dedicated file with given format string
+/**
+ * Output
+ */
+
+/**
+ * Outputs one item to dedicated file with given format string
+ */
 void writeOne(FILE* output, char* format, Synthesizer item)
 {
     fprintf(output, format, item.name, item.manufacturer, item.year, item.voices, item.analog ? 1 : 0);
 }
 
-// Outputs list to dedicated file with given format string
+/** 
+ * Outputs list to dedicated file with given format string
+ */
 void write(FILE* output, SynthesizerArray array, char* format)
 {
     Synthesizer item;
@@ -171,7 +223,9 @@ void write(FILE* output, SynthesizerArray array, char* format)
     }
 }
 
-// Outputs head of table
+/**
+ * Outputs head of table
+ */
 void printHead()
 {
     puts(
@@ -181,7 +235,9 @@ void printHead()
     );
 }
 
-// Prints whole list to stdout with pretty format
+/**
+ * Prints whole list to stdout with pretty format
+ */
 int print(SynthesizerArray* list)
 {
     printHead();
@@ -189,43 +245,7 @@ int print(SynthesizerArray* list)
     return 0;
 }
 
-// Adds item to list
-int addItem(SynthesizerArray* list)
-{
-    Synthesizer* new;
-    if (list->size == list->capacity) {
-        list->capacity++;
-        new = realloc(list->array, list->size);
-        if (new == NULL) {
-            return 1;
-        }
-        list->array = new;
-    }
-    list->size++;
 
-    Synthesizer item;
-
-    printf("Zadej jmeno modelu: ");
-    scanf("%15s", item.name);
-
-    printf("Zadej jmeno vyrobce: ");
-    scanf("%15s", item.manufacturer);
-
-    printf("Zadej rok vydani: ");
-    scanf("%d", &item.year);
-
-    printf("Zadej pocet hlasu: ");
-    scanf("%d", &item.voices);
-
-    clearBuffer();
-    char analog;
-    printf("Je analogovy? y/n: ");
-    scanf("%c", &analog);
-    item.analog = analog == 'y';
-
-    list->array[list->size - 1] = item;
-    return 0;
-}
 
 SynthesizerArrayResult filter(SynthesizerArray list, Synthesizer key, Condition condition)
 {
@@ -345,24 +365,7 @@ SynthesizerField getField()
     return fields[index];
 }
 
-// Prints models from loaded manufacturer
-int filterDialogue(SynthesizerArray* list)
-{ 
-    fieldsFilterMenu();
-    SynthesizerField field = getField();
-    Synthesizer key;
-    getKeyByField(*list, field, &key);
-    printHead();
 
-    SynthesizerArrayResult models = filter(*list, key, field.condition);
-    if (models.error != 0) {
-        return models.error;
-    }
-    
-    write(stdout, models.result, PRETTY_FORMAT);
-
-    return 0;
-}
 
 SynthesizerResult getOldest(SynthesizerArray list)
 {
@@ -379,19 +382,7 @@ SynthesizerResult getOldest(SynthesizerArray list)
     return (SynthesizerResult) { &oldest, 0 };
 }
 
-// Outputs oldest item
-int oldest(SynthesizerArray* list)
-{
-    SynthesizerResult result = getOldest(*list);
-    
-    if (result.error != -1) {
-        return result.error;
-    }
 
-    printHead();
-    writeOne(stdout, PRETTY_FORMAT, *result.result);
-    return 0;
-}
 
 // Part of merge sort - melting
 void melt(SynthesizerArray* list, SynthesizerArray* help, int from, int to, int middle, Condition compare)
@@ -446,39 +437,6 @@ int sort(SynthesizerArray* list, Condition condition)
     return 0;
 }
 
-// User interface for sorting
-int sortDialogue(SynthesizerArray* list, Condition condition)
-{
-    int choice;
-    printf("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ");
-    scanf("%i", &choice);
-    if (choice == 1) {
-        SynthesizerArray copied = copy(*list);
-        int code;
-        if ((code = sort(&copied, condition)) != 0) {
-            return code;
-        }
-        printHead();
-        write(stdout, copied, PRETTY_FORMAT);
-        free(copied.array);
-        return 0;
-    }
-
-    return sort(list, condition);
-}
-
-// Menu item for sorting by year
-int sortByYear(SynthesizerArray* list)
-{
-    return sortDialogue(list, byYearCondition);
-}
-
-// Menu item for sorting by name
-int sortByName(SynthesizerArray* list)
-{
-    return sortDialogue(list, byNameCondition);
-}
-
 SynthesizerResult binarySearch(SynthesizerArray list, int from, int to, Synthesizer key, Condition condition)
 {
     if (from > to) {
@@ -506,6 +464,102 @@ SynthesizerResult searchWithDialogue(SynthesizerArray *list)
     scanf("%15s", key.name);
 
     return binarySearch(*list, 0, list->size - 1, key, byNameCondition);
+}
+
+// User interface for sorting
+int sortDialogue(SynthesizerArray* list, Condition condition)
+{
+    int choice;
+    printf("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ");
+    scanf("%i", &choice);
+    if (choice == 1) {
+        SynthesizerArray copied = copy(*list);
+        int code;
+        if ((code = sort(&copied, condition)) != 0) {
+            return code;
+        }
+        printHead();
+        write(stdout, copied, PRETTY_FORMAT);
+        free(copied.array);
+        return 0;
+    }
+
+    return sort(list, condition);
+}
+
+/**
+ * Actions from menu
+ */
+
+// Adds item to list
+int addItem(SynthesizerArray* list)
+{
+    Synthesizer* new;
+    if (list->size == list->capacity) {
+        list->capacity++;
+        new = realloc(list->array, list->size);
+        if (new == NULL) {
+            return 1;
+        }
+        list->array = new;
+    }
+    list->size++;
+
+    Synthesizer item;
+
+    printf("Zadej jmeno modelu: ");
+    scanf("%15s", item.name);
+
+    printf("Zadej jmeno vyrobce: ");
+    scanf("%15s", item.manufacturer);
+
+    printf("Zadej rok vydani: ");
+    scanf("%d", &item.year);
+
+    printf("Zadej pocet hlasu: ");
+    scanf("%d", &item.voices);
+
+    clearBuffer();
+    char analog;
+    printf("Je analogovy? y/n: ");
+    scanf("%c", &analog);
+    item.analog = analog == 'y';
+
+    list->array[list->size - 1] = item;
+    return 0;
+}
+
+// Prints models from loaded manufacturer
+int filterDialogue(SynthesizerArray* list)
+{ 
+    fieldsFilterMenu();
+    SynthesizerField field = getField();
+    Synthesizer key;
+    getKeyByField(*list, field, &key);
+    printHead();
+
+    SynthesizerArrayResult models = filter(*list, key, field.condition);
+    if (models.error != 0) {
+        return models.error;
+    }
+    
+    write(stdout, models.result, PRETTY_FORMAT);
+
+    free(models.result.array);
+
+    return 0;
+}
+
+// Menu item for sorting by year
+int sortByYear(SynthesizerArray* list)
+{
+    return sortDialogue(list, byYearCondition);
+}
+
+// Menu item for sorting by name
+int sortByName(SynthesizerArray* list)
+{
+    return sortDialogue(list, byNameCondition);
 }
 
 int searchDialogue(SynthesizerArray *list)
@@ -550,8 +604,22 @@ int delete(SynthesizerArray *list)
     return 0;
 }
 
+// Outputs oldest item
+int oldest(SynthesizerArray* list)
+{
+    SynthesizerResult result = getOldest(*list);
+    
+    if (result.error != -1) {
+        return result.error;
+    }
+
+    printHead();
+    writeOne(stdout, PRETTY_FORMAT, *result.result);
+    return 0;
+}
+
 const int menu_items_count = 9;
-const MenuItem menu_items[] = {
+const action_t menu_items[] = {
     {"Vypsat data", print},
     {"Seradit podle jmena", sortByName},
     {"Seradit podle roku vydani", sortByYear},
