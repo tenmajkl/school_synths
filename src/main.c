@@ -6,19 +6,11 @@
 #define DATA_FORMAT "%s|%s|%d|%d|%d\n"
 #define PRETTY_FORMAT "| %15s | %15s | %10d | %16d | %9d |\n"
 
-/**
- * TODO
- *
- * poslat petrovi mazani bufferu
- * vyresit mazani (hleda to i smazane poozky nevim jak to udelat
- * poresit struktury (ne v php standartu)
- */
+// --- Structures ---
 
 /**
- * Structures 
+ * Represents synth entity
  */
-
-// Represents synth entity
 typedef struct {
     char name[16];
     char manufacturer[16];
@@ -26,68 +18,86 @@ typedef struct {
     int voices;
     bool analog;
     bool deleted;
-} Synthesizer;
+} synthesizer_t;
 
-// Represents array of synths with capacity and size
+/**
+ * Represents array of synths with capacity and size
+ */
 typedef struct {
-    Synthesizer* array;
+    synthesizer_t* array;
     int size;
     int capacity;
-} SynthesizerArray;
+} synthesizer_array_t;
 
-// Represents one item from menu
+/**
+ * Represents one item from menu
+ */
 typedef struct {
     char* description;
-    int (*function)(SynthesizerArray* list);
+    int (*function)(synthesizer_array_t* list);
 } action_t;
 
 /**
- * Structure containing result of SynthesizerArray along with error code in case of error
+ * Structure containing result of synthesizer_array_t along with error code in case of error
  *
  * Basicaly cheap copy of rust Result
  */
 typedef struct {
-    SynthesizerArray result;
+    synthesizer_array_t result;
     int error;
-} SynthesizerArrayResult;
+} synthesizer_array_result_t;
 
 /**
- * Structure containing result of Synthesizer along with error code in case of error
+ * Structure containing result of synthesizer_t along with error code in case of error
  *
  * Basicaly cheap copy of rust Result
  */
 typedef struct {
-    Synthesizer *result;
+    synthesizer_t *result;
     int error;
-} SynthesizerResult;
+} synthesizer_result_t;
 
-// Sort comparing function
-typedef int (*Condition)(Synthesizer first, Synthesizer second);
+/**
+ * Comparing function
+ */
+typedef int (*condition_t)(synthesizer_t first, synthesizer_t second);
 
+/**
+ * Type of item field
+ */
 typedef enum {
     NAME,
     MANUFACTURER,
     YEAR,
     VOICES,
     ANALOG
-} SynthesizerFieldIndex;
+} synthesizer_field_index_t;
 
+/**
+ * Represents item field for dynamic actions
+ *
+ * Each field has its index to be represented in getField,
+ * descriptions for field menus,
+ * format for scanf
+ * and condition function for comparing
+ */
 typedef struct {
-    SynthesizerFieldIndex index;
+    synthesizer_field_index_t index;
     char* filter_description;
     char* edit_description;
     char* scanf_format;
-    Condition condition;
-} SynthesizerField;
-
-typedef struct {
-    SynthesizerField result;
-    int error;  
-} SynthesizerFieldResult;
+    condition_t condition;
+} synthesizer_field_t;
 
 /**
- * Errors
- *
+ * Result of function that might return item field
+ */
+typedef struct {
+    synthesizer_field_t result;
+    int error;  
+} synthesizer_field_tResult;
+
+/* --- Errors ---
  * In order to make errors more consistent, they are assigned to codes.
  */
 
@@ -112,9 +122,7 @@ void error(int code)
     printf("[ERROR] %s\n", errors[code - 1]);
 }
 
-/**
- * Helpers
- */
+// --- Helpers ---
 
 /**
  * Clears screen depending on curent OS
@@ -146,22 +154,22 @@ void waitForClick(void)
     getchar();
 }
 
-/**
- * Lists and structures
- */
+// --- Lists and structures ---
 
 /**
  * Loads data from file to array
  *
  * Can return codes 5, 6, 0
  */
-SynthesizerArrayResult load(FILE* input)
+synthesizer_array_result_t load(FILE* input)
 {
-    SynthesizerArray array;
-    array.array = malloc(16 * sizeof(Synthesizer));
+    synthesizer_array_result_t result;
+    result.error = 0; 
+    synthesizer_array_t array;
+    array.array = malloc(16 * sizeof(synthesizer_t));
     array.size = 0;
     array.capacity = 16;
-    Synthesizer* new;
+    synthesizer_t* new;
     int analog;
     int loading_result;
 
@@ -178,28 +186,33 @@ SynthesizerArrayResult load(FILE* input)
         array.size++;
         if (array.size == array.capacity) {
             array.capacity += 16;
-            new = realloc(array.array, array.capacity * sizeof(Synthesizer));
+            new = realloc(array.array, array.capacity * sizeof(synthesizer_t));
             if (new == NULL) {
-                return (SynthesizerArrayResult) { array, 5 };
+                result.result = array;
+                result.error = 5;
+                return result;
             }
             array.array = new;
         }
     }
 
     if (loading_result != EOF) {
-        return (SynthesizerArrayResult) { array, 6 };
+        result.result = array;
+        result.error = 6;
+        return result;
     }
 
-    return (SynthesizerArrayResult) { array, 0 };
+    result.result = array;
+    return result;
 }
 
 /**
  * Copies one list to another
  */
-SynthesizerArray copy(SynthesizerArray list)
+synthesizer_array_t copy(synthesizer_array_t list)
 {
-    SynthesizerArray result = list;
-    Synthesizer* array = malloc(list.size * sizeof(Synthesizer));
+    synthesizer_array_t result = list;
+    synthesizer_t* array = malloc(list.size * sizeof(synthesizer_t));
 
     for (int i = 0; i < list.size; i++) {
         array[i] = list.array[i];
@@ -209,14 +222,12 @@ SynthesizerArray copy(SynthesizerArray list)
     return result;
 }
 
-/**
- * Output
- */
+// --- Output ---
 
 /**
  * Outputs one item to dedicated file with given format string
  */
-void writeOne(FILE* output, char* format, Synthesizer item)
+void writeOne(FILE* output, char* format, synthesizer_t item)
 {
     fprintf(output, format, item.name, item.manufacturer, item.year, item.voices, item.analog ? 1 : 0);
 }
@@ -224,9 +235,9 @@ void writeOne(FILE* output, char* format, Synthesizer item)
 /** 
  * Outputs list to dedicated file with given format string
  */
-void write(FILE* output, SynthesizerArray array, char* format)
+void write(FILE* output, synthesizer_array_t array, char* format)
 {
-    Synthesizer item;
+    synthesizer_t item;
     for (int index = 0; index < array.size; index++) {
         item = array.array[index];
         if (item.deleted) {
@@ -252,78 +263,115 @@ void printHead()
 /**
  * Prints whole list to stdout with pretty format
  */
-int print(SynthesizerArray* list)
+int print(synthesizer_array_t* list)
 {
     printHead();
     write(stdout, *list, PRETTY_FORMAT);
     return 0;
 }
 
+// --- Filtering ---
 
-
-SynthesizerArrayResult filter(SynthesizerArray list, Synthesizer key, Condition condition)
+synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)
 {
-    SynthesizerArray result;
-    result.array = malloc(list.size * sizeof(Synthesizer));
+    synthesizer_array_result_t result;
+    result.error = 0;
+    synthesizer_array_t array;
+    array.capacity = list.capacity;
+    array.size = 0;
+    array.array = malloc(list.size * sizeof(synthesizer_t));
 
-    if (result.array == NULL) {
-        return (SynthesizerArrayResult) { list, 3 };
+    if (array.array == NULL) {
+        result.error = 2;
+        result.result = list;
+        return result;
     }
-
-    int result_index = 0;
 
     for (int index = 0; index < list.size; index++) {
         if (!list.array[index].deleted && condition(list.array[index], key) == 0) {
-            result.array[result_index] = list.array[index];
-            result_index++;
+            array.array[array.size] = list.array[index];
+            array.size++;
         }
     }
 
-    if (result_index < list.size) {
-        Synthesizer* new = realloc(result.array, result_index * sizeof(Synthesizer));
+    if (array.size < list.size) {
+        synthesizer_t* new = realloc(array.array, array.size * sizeof(synthesizer_t));
         if (new == NULL) {
-            return (SynthesizerArrayResult) { result, 3 };
+            result.error = 3;
+            result.result = array;
+            return result;
         }
-        result.array = new;
-        result.size = result_index;
+        array.array = new;
+        array.capacity = array.size;
     }
 
-    return (SynthesizerArrayResult) { result, 0 };
+    result.result = array;
+    return result;
 }
 
 /**
- * Comparing functions
+ * Returns oldest synth
  */
+synthesizer_result_t getOldest(synthesizer_array_t list)
+{
+    if (list.size == 0) {
+        return (synthesizer_result_t) { .error = 2 };
+    }
+    synthesizer_t* oldest = &(list.array[0]);
+    for (int index = 1; index < list.size; index++) {
+        if (list.array[index].year < oldest->year) {
+            oldest = &(list.array[index]);
+        }
+    }
+    return (synthesizer_result_t) { oldest, 0 };
+}
 
-// Sorting condition for smallest year
-int byYearCondition(Synthesizer first, Synthesizer second)
+// --- Comparing functions ---
+
+/**
+ * Compares two items by year
+ */
+int byYearCondition(synthesizer_t first, synthesizer_t second)
 {
     return first.year - second.year;
 }
 
-int byManufacturerCondition(Synthesizer first, Synthesizer second)
+/**
+ * Compares two items by manufacturer
+ */
+int byManufacturerCondition(synthesizer_t first, synthesizer_t second)
 {
     return strcmp(first.manufacturer, second.manufacturer);
 }
 
-// Sorting condition for alphabetic sorting
-int byNameCondition(Synthesizer first, Synthesizer second)
+/**
+ * Compares two items by name
+ */
+int byNameCondition(synthesizer_t first, synthesizer_t second)
 {
     return strcmp(first.name, second.name);
 }
 
-int byVoicesCondition(Synthesizer first, Synthesizer second)
+/**
+ * Compares two items by number of voices
+ */
+int byVoicesCondition(synthesizer_t first, synthesizer_t second)
 {
     return first.voices - second.voices;
 }
 
-int byAnalogCondition(Synthesizer first, Synthesizer second)
+/**
+ * Compares two items by analogness
+ */
+int byAnalogCondition(synthesizer_t first, synthesizer_t second)
 {
     return first.analog - second.analog;
 }
 
+// --- Fields ---
+
 const int field_count = 5;
-const SynthesizerField fields[] = {
+const synthesizer_field_t fields[] = {
     { NAME, "Podle jmena", "Jmeno", "%15s", byNameCondition },
     { MANUFACTURER, "Podle vyrobce", "Vyrobce", "%15s", byManufacturerCondition },
     { YEAR, "Podle roku vydani", "Rok vydani", "%d", byYearCondition },
@@ -331,6 +379,9 @@ const SynthesizerField fields[] = {
     { ANALOG, "Podle analogovosti", "Analogovy", "%d", byAnalogCondition }
 };
 
+/**
+ * Outputs menu for filters
+ */
 void fieldsFilterMenu()
 {
     for (int index = 0; index < field_count; index++) {
@@ -338,6 +389,9 @@ void fieldsFilterMenu()
     }
 }
 
+/**
+ * Outputs menu for editing
+ */
 void fieldsEditMenu()
 {
     for (int index = 0; index < field_count; index++) {
@@ -345,12 +399,17 @@ void fieldsEditMenu()
     }
 }
 
-// Every key is represented by Synthesizer struct, here we get this struct
-void getKeyByField(SynthesizerArray list, SynthesizerField field, Synthesizer* key)
+/**
+ * Loads given value to given key from user 
+ *
+ * This allows us to dynamicaly edit and create keys for filtering
+ */
+void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesizer_t* key)
 {
     printf("Zadej %s: ", field.edit_description);
     clearBuffer();
-
+    char analog;
+    
     switch (field.index) {
         case NAME:
             scanf("%15s", key->name);
@@ -365,7 +424,6 @@ void getKeyByField(SynthesizerArray list, SynthesizerField field, Synthesizer* k
             scanf("%d", &key->voices);
             break;
         case ANALOG:
-            char analog;
             scanf("%c", &analog);
             key->analog = analog == 'y';
             break;
@@ -373,39 +431,28 @@ void getKeyByField(SynthesizerArray list, SynthesizerField field, Synthesizer* k
 
 }
 
-SynthesizerFieldResult getField()
+/**
+ * Loads field from input
+ */
+synthesizer_field_tResult getField()
 {
     int index;
     printf("Zadej cislo polozky: ");
     scanf("%d", &index);
 
     if (index < 0 || index >= field_count) {
-        return (SynthesizerFieldResult) { .error = 8 };
+        return (synthesizer_field_tResult) { .error = 8 };
     }
 
-    return (SynthesizerFieldResult) { fields[index], 0 };
+    return (synthesizer_field_tResult) { fields[index], 0 };
 }
 
+// --- Sorting ---
 
-
-SynthesizerResult getOldest(SynthesizerArray list)
-{
-    if (list.size == 0) {
-        return (SynthesizerResult) { .error = 2 };
-    }
-    Synthesizer* oldest = &(list.array[0]);
-    for (int index = 1; index < list.size; index++) {
-        if (list.array[index].year < oldest->year) {
-            oldest = &(list.array[index]);
-        }
-    }
-    return (SynthesizerResult) { oldest, 0 };
-}
-
-
-
-// Part of merge sort - melting
-void melt(SynthesizerArray* list, SynthesizerArray* help, int from, int to, int middle, Condition compare)
+/**
+ * Merge sort melting
+ */
+void melt(synthesizer_array_t* list, synthesizer_array_t* help, int from, int to, int middle, condition_t compare)
 {
     int left = from, right = middle + 1, index = from;
     while (left <= middle && right <= to) {
@@ -425,8 +472,10 @@ void melt(SynthesizerArray* list, SynthesizerArray* help, int from, int to, int 
     }
 }
 
-// Merge sort itself
-void mergeSort(SynthesizerArray* list, SynthesizerArray* help, int from, int to, Condition condition)
+/**
+ * Merge sort algorithm
+ */
+void mergeSort(synthesizer_array_t* list, synthesizer_array_t* help, int from, int to, condition_t condition)
 {
     if (from >= to) {
         return;
@@ -444,11 +493,15 @@ void mergeSort(SynthesizerArray* list, SynthesizerArray* help, int from, int to,
     }
 }
 
-// Abstraction over mergeSort that creates help array
-int sort(SynthesizerArray* list, Condition condition)
+/**
+ * Sorts data using merge sort
+ *
+ * Basicaly helper for sorting which makes it simpler to work with
+ */
+int sort(synthesizer_array_t* list, condition_t condition)
 {
-    SynthesizerArray help = *list;
-    help.array = malloc(help.size * sizeof(Synthesizer));
+    synthesizer_array_t help = *list;
+    help.array = malloc(help.size * sizeof(synthesizer_t));
     if (help.array == NULL) {
         return 3;
     }
@@ -456,31 +509,16 @@ int sort(SynthesizerArray* list, Condition condition)
     free(help.array);
     return 0;
 }
-
-// Searches with dialogue
-SynthesizerResult searchWithDialogue(SynthesizerArray *list)
-{
-    Synthesizer key;;
-    printf("Zadej jmeno: ");
-    scanf("%15s", key.name);
-
-    SynthesizerArrayResult result = filter(*list, key, byNameCondition);
-
-    if (result.error != 0) {
-        return (SynthesizerResult) { .error = result.error };
-    }
-
-    return (SynthesizerResult) { &result.result.array[0], 0 };
-}
-
-// User interface for sorting
-int sortDialogue(SynthesizerArray* list, Condition condition)
+/**
+ * Generic user interface for sorting
+ */
+int sortDialogue(synthesizer_array_t* list, condition_t condition)
 {
     int choice;
     printf("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ");
     scanf("%i", &choice);
     if (choice == 1) {
-        SynthesizerArray copied = copy(*list);
+        synthesizer_array_t copied = copy(*list);
         int code;
         if ((code = sort(&copied, condition)) != 0) {
             return code;
@@ -494,14 +532,67 @@ int sortDialogue(SynthesizerArray* list, Condition condition)
     return sort(list, condition);
 }
 
-/**
- * Actions from menu
- */
+// --- Searching ---
 
-// Adds item to list
-int addItem(SynthesizerArray* list)
+/**
+ * Searches for item with given name.
+ *
+ * Since we're not sure that the array is sorted by name,
+ * binary search is not acceptable since with sorting it would be snailing slow.
+ *
+ * Other way of solving this would be using filter with byNameCondition and then take first element
+ * However this returns array of items, not pointers, so it won't be editable 
+ * and it would be even less effective than this.
+ */
+synthesizer_result_t search(synthesizer_array_t list, char* name)
 {
-    Synthesizer* new;
+    if (list.size == 0) {
+        return (synthesizer_result_t) { .error = 2 };
+    }
+
+    int index = 0;
+
+    while (index < list.size 
+            && (
+                strcmp(list.array[index].name, name) != 0 
+                || list.array[index].deleted
+            )
+    ) {
+        index++;
+    }
+
+    return index == list.size
+        ? ((synthesizer_result_t) { .error = 7})
+        : ((synthesizer_result_t) { &list.array[index], 0})
+    ;
+}
+
+/**
+ * Dialogue over searching
+ */
+synthesizer_result_t searchWithDialogue(synthesizer_array_t *list)
+{
+    char name[16];
+    printf("Zadej jmeno: ");
+    scanf("%15s", name);
+
+    synthesizer_result_t result = search(*list, name);
+
+    if (result.error != 0) {
+        return (synthesizer_result_t) { .error = result.error };
+    }
+
+    return (synthesizer_result_t) { result.result, 0 };
+}
+
+// --- Actions from menu ---
+
+/**
+ * Adds item to list
+ */
+int addItemAction(synthesizer_array_t* list)
+{
+    synthesizer_t* new;
     if (list->size == list->capacity) {
         list->capacity++;
         new = realloc(list->array, list->size);
@@ -512,7 +603,7 @@ int addItem(SynthesizerArray* list)
     }
     list->size++;
 
-    Synthesizer item;
+    synthesizer_t item;
 
     printf("Zadej jmeno modelu: ");
     scanf("%15s", item.name);
@@ -538,19 +629,21 @@ int addItem(SynthesizerArray* list)
     return 0;
 }
 
-// Prints models from loaded manufacturer
-int filterDialogue(SynthesizerArray* list)
+/**
+ * Prints models from loaded manufacturer
+ */
+int filterDialogueAction(synthesizer_array_t* list)
 { 
     fieldsFilterMenu();
-    SynthesizerFieldResult field = getField();
+    synthesizer_field_tResult field = getField();
     if (field.error != 0) {
         return field.error;
     }
-    Synthesizer key;
+    synthesizer_t key;
     getKeyByField(*list, field.result, &key);
     printHead();
 
-    SynthesizerArrayResult models = filter(*list, key, field.result.condition);
+    synthesizer_array_result_t models = filter(*list, key, field.result.condition);
     if (models.error != 0) {
         return models.error;
     }
@@ -562,21 +655,28 @@ int filterDialogue(SynthesizerArray* list)
     return 0;
 }
 
-// Menu item for sorting by year
-int sortByYear(SynthesizerArray* list)
+/**
+ * Menu item for sorting by year
+ */
+int sortByYearAction(synthesizer_array_t* list)
 {
     return sortDialogue(list, byYearCondition);
 }
 
-// Menu item for sorting by name
-int sortByName(SynthesizerArray* list)
+/**
+ * Menu item for sorting by name
+ */
+int sortByNameAction(synthesizer_array_t* list)
 {
     return sortDialogue(list, byNameCondition);
 }
 
-int searchDialogue(SynthesizerArray *list)
+/**
+ * Searches for given item
+ */
+int searchDialogue(synthesizer_array_t *list)
 {
-    SynthesizerResult result = searchWithDialogue(list);
+    synthesizer_result_t result = searchWithDialogue(list);
     if (result.error != 0) {
         return result.error;
     }
@@ -586,19 +686,21 @@ int searchDialogue(SynthesizerArray *list)
     return 0;
 }
 
-
-int edit(SynthesizerArray* list)
+/**
+ * Edits given item
+ */
+int editAction(synthesizer_array_t* list)
 {
-    SynthesizerResult result = searchWithDialogue(list);
+    synthesizer_result_t result = searchWithDialogue(list);
 
     if (result.error != 0) {
         return result.error;
     }
 
-    Synthesizer* item = result.result;
+    synthesizer_t* item = result.result;
 
     fieldsEditMenu();
-    SynthesizerFieldResult field = getField(); 
+    synthesizer_field_tResult field = getField(); 
     if (field.error != 0) {
         return field.error;
     }
@@ -607,9 +709,12 @@ int edit(SynthesizerArray* list)
     return 0;
 }
 
-int delete(SynthesizerArray *list)
+/**
+ * Removes given item
+ */
+int deleteAction(synthesizer_array_t *list)
 {
-    SynthesizerResult result = searchWithDialogue(list);
+    synthesizer_result_t result = searchWithDialogue(list);
     if (result.error != 0) {
         return result.error;
     }
@@ -620,9 +725,9 @@ int delete(SynthesizerArray *list)
 }
 
 // Outputs oldest item
-int oldest(SynthesizerArray* list)
+int oldestAction(synthesizer_array_t* list)
 {
-    SynthesizerResult result = getOldest(*list);
+    synthesizer_result_t result = getOldest(*list);
     
     if (result.error != 0) {
         return result.error;
@@ -636,17 +741,19 @@ int oldest(SynthesizerArray* list)
 const int menu_items_count = 9;
 const action_t menu_items[] = {
     {"Vypsat data", print},
-    {"Seradit podle jmena", sortByName},
-    {"Seradit podle roku vydani", sortByYear},
-    {"Filtrovat", filterDialogue},
-    {"Najit nejstarsi syntezator", oldest},
-    {"Pridat syntezator", addItem},
+    {"Seradit podle jmena", sortByNameAction},
+    {"Seradit podle roku vydani", sortByYearAction},
+    {"Filtrovat", filterDialogueAction},
+    {"Najit nejstarsi syntezator", oldestAction},
+    {"Pridat syntezator", addItemAction},
     {"Najit syntezator podle jmena", searchDialogue},
-    {"Smazat syntezator", delete},
-    {"Upravit syntezator", edit},
+    {"Smazat syntezator", deleteAction},
+    {"Upravit syntezator", editAction},
 };
 
-// Prints menu to stdout
+/**
+ * Prints menu to stdout
+ */
 void printMenu(void)
 {
     printf("0: Ukoncit\n");
@@ -655,8 +762,10 @@ void printMenu(void)
     }
 }
 
-// Menu interface
-void menu(SynthesizerArray* list)
+/**
+ * Menu interface
+ */
+void menu(synthesizer_array_t* list)
 {
     int choice = -1;
     do {
@@ -686,7 +795,6 @@ void menu(SynthesizerArray* list)
 
 int main(void)
 {
-    // TODO think of using cli args
     char file_name[32];
     printf("Zadej jmeno souboru: ");
     scanf("%31s", file_name);
@@ -695,14 +803,14 @@ int main(void)
     if (file == NULL) {
         return -1;
     }
-    SynthesizerArrayResult loaded = load(file);
+    synthesizer_array_result_t loaded = load(file);
 
     if (loaded.error != 0) {
         error(loaded.error);
         waitForClick();
     }
 
-    SynthesizerArray list = loaded.result;
+    synthesizer_array_t list = loaded.result;
 
     fclose(file);
 
