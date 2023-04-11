@@ -1,101 +1,27 @@
+/**
+ * Synths
+ *
+ * @author Michal Kripac
+ * @year 2023
+ * @license GPL3
+ * 
+ * Notes:
+ *  - shoegaze is based
+ *  - my relationship with c is love-hate
+ *
+ * TODO:
+ *  - split it into files
+ */
+
+#include<stddef.h>
 #include<stdio.h>
 #include<stdbool.h>
 #include<stdlib.h>
 #include<string.h>
+#include "types.h"
 
-#define DATA_FORMAT "%s|%s|%d|%d|%d\n"
-#define PRETTY_FORMAT "| %15s | %15s | %10d | %16d | %9d |\n"
-
-// --- Structures ---
-
-/**
- * Represents synth entity
- */
-typedef struct {
-    char name[16];
-    char manufacturer[16];
-    int year;
-    int voices;
-    bool analog;
-    bool deleted;
-} synthesizer_t;
-
-/**
- * Represents array of synths with capacity and size
- */
-typedef struct {
-    synthesizer_t* array;
-    int size;
-    int capacity;
-} synthesizer_array_t;
-
-/**
- * Represents one item from menu
- */
-typedef struct {
-    char* description;
-    int (*function)(synthesizer_array_t* list);
-} action_t;
-
-/**
- * Structure containing result of synthesizer_array_t along with error code in case of error
- *
- * Basicaly cheap copy of rust Result
- */
-typedef struct {
-    synthesizer_array_t result;
-    int error;
-} synthesizer_array_result_t;
-
-/**
- * Structure containing result of synthesizer_t along with error code in case of error
- *
- * Basicaly cheap copy of rust Result
- */
-typedef struct {
-    synthesizer_t *result;
-    int error;
-} synthesizer_result_t;
-
-/**
- * Comparing function
- */
-typedef int (*condition_t)(synthesizer_t first, synthesizer_t second);
-
-/**
- * Type of item field
- */
-typedef enum {
-    NAME,
-    MANUFACTURER,
-    YEAR,
-    VOICES,
-    ANALOG
-} synthesizer_field_index_t;
-
-/**
- * Represents item field for dynamic actions
- *
- * Each field has its index to be represented in getField,
- * descriptions for field menus,
- * format for scanf
- * and condition function for comparing
- */
-typedef struct {
-    synthesizer_field_index_t index;
-    char* filter_description;
-    char* edit_description;
-    char* scanf_format;
-    condition_t condition;
-} synthesizer_field_t;
-
-/**
- * Result of function that might return item field
- */
-typedef struct {
-    synthesizer_field_t result;
-    int error;  
-} synthesizer_field_tResult;
+#define DATA_FORMAT "%d|%s|%s|%d|%d|%d\n"
+#define PRETTY_FORMAT "| %2d | %15s | %15s | %10d | %16d | %9d |\n"
 
 /* --- Errors ---
  * In order to make errors more consistent, they are assigned to codes.
@@ -173,13 +99,14 @@ synthesizer_array_result_t load(FILE* input)
     int analog;
     int loading_result;
 
-    while ((loading_result = fscanf(input, "%15[^|\n]|%15[^|\n]|%d|%d|%d\n",
+    while ((loading_result = fscanf(input, "%d|%15[^|\n]|%15[^|\n]|%d|%d|%d\n",
+                &array.array[array.size].id,
                 array.array[array.size].name,
                 array.array[array.size].manufacturer,
                 &array.array[array.size].year,
                 &array.array[array.size].voices,
                 &analog
-            )) == 5
+            )) == 6
     ) {
         array.array[array.size].analog = analog != 0;
         array.array[array.size].deleted = false;
@@ -212,11 +139,10 @@ synthesizer_array_result_t load(FILE* input)
 synthesizer_array_t copy(synthesizer_array_t list)
 {
     synthesizer_array_t result = list;
-    synthesizer_t* array = malloc(list.size * sizeof(synthesizer_t));
+    size_t size = list.size * sizeof(synthesizer_t);
+    synthesizer_t* array = malloc(size);
 
-    for (int i = 0; i < list.size; i++) {
-        array[i] = list.array[i];
-    }
+    memcpy(array, list.array, size);
 
     result.array = array;
     return result;
@@ -229,7 +155,7 @@ synthesizer_array_t copy(synthesizer_array_t list)
  */
 void writeOne(FILE* output, char* format, synthesizer_t item)
 {
-    fprintf(output, format, item.name, item.manufacturer, item.year, item.voices, item.analog ? 1 : 0);
+    fprintf(output, format, item.id, item.name, item.manufacturer, item.year, item.voices, item.analog ? 1 : 0);
 }
 
 /** 
@@ -254,9 +180,9 @@ void write(FILE* output, synthesizer_array_t array, char* format)
 void printHead()
 {
     puts(
-        "+-----------------+-----------------+------------+------------------+-----------+\n"
-        "| Model           | Vyrobce         | Rok vydani | Pocet oscilatoru | Analogovy |\n"
-        "|-----------------+-----------------+------------+------------------+-----------|"
+        "+----+-----------------+-----------------+------------+------------------+-----------+\n"
+        "| id | Model           | Vyrobce         | Rok vydani | Pocet oscilatoru | Analogovy |\n"
+        "|----+-----------------+-----------------+------------+------------------+-----------|"
     );
 }
 
@@ -329,6 +255,14 @@ synthesizer_result_t getOldest(synthesizer_array_t list)
 // --- Comparing functions ---
 
 /**
+ * Compares two items by id
+ */
+int byIdCondition(synthesizer_t first, synthesizer_t second)
+{
+    return first.id - second.id;
+}
+
+/**
  * Compares two items by year
  */
 int byYearCondition(synthesizer_t first, synthesizer_t second)
@@ -370,6 +304,9 @@ int byAnalogCondition(synthesizer_t first, synthesizer_t second)
 
 // --- Fields ---
 
+/**
+ * Fields which can be used for editing or grouping
+ */
 const int field_count = 5;
 const synthesizer_field_t fields[] = {
     { NAME, "Podle jmena", "Jmeno", "%15s", byNameCondition },
@@ -535,7 +472,7 @@ int sortDialogue(synthesizer_array_t* list, condition_t condition)
 // --- Searching ---
 
 /**
- * Searches for item with given name.
+ * Searches for item with given comparing function and key.
  *
  * Since we're not sure that the array is sorted by name,
  * binary search is not acceptable since with sorting it would be snailing slow.
@@ -544,7 +481,7 @@ int sortDialogue(synthesizer_array_t* list, condition_t condition)
  * However this returns array of items, not pointers, so it won't be editable 
  * and it would be even less effective than this.
  */
-synthesizer_result_t search(synthesizer_array_t list, char* name)
+synthesizer_result_t search(synthesizer_array_t list, synthesizer_t key, condition_t compare)
 {
     if (list.size == 0) {
         return (synthesizer_result_t) { .error = 2 };
@@ -554,7 +491,7 @@ synthesizer_result_t search(synthesizer_array_t list, char* name)
 
     while (index < list.size 
             && (
-                strcmp(list.array[index].name, name) != 0 
+                compare(list.array[index], key) != 0
                 || list.array[index].deleted
             )
     ) {
@@ -572,11 +509,11 @@ synthesizer_result_t search(synthesizer_array_t list, char* name)
  */
 synthesizer_result_t searchWithDialogue(synthesizer_array_t *list)
 {
-    char name[16];
-    printf("Zadej jmeno: ");
-    scanf("%15s", name);
+    synthesizer_t key;
+    printf("Zadej id: ");
+    scanf("%d", &key.id);
 
-    synthesizer_result_t result = search(*list, name);
+    synthesizer_result_t result = search(*list, key, byIdCondition);
 
     if (result.error != 0) {
         return (synthesizer_result_t) { .error = result.error };
@@ -624,6 +561,8 @@ int addItemAction(synthesizer_array_t* list)
     item.analog = analog == 'y';
 
     item.deleted = false;
+
+    item.id = list->size > 1 ? list->array[list->size - 2].id + 1 : 1;
 
     list->array[list->size - 1] = item;
     return 0;
@@ -746,7 +685,7 @@ const action_t menu_items[] = {
     {"Filtrovat", filterDialogueAction},
     {"Najit nejstarsi syntezator", oldestAction},
     {"Pridat syntezator", addItemAction},
-    {"Najit syntezator podle jmena", searchDialogue},
+    {"Najit syntezator podle id", searchDialogue},
     {"Smazat syntezator", deleteAction},
     {"Upravit syntezator", editAction},
 };
