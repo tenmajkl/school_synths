@@ -7,6 +7,14 @@
 #define PRETTY_FORMAT "| %15s | %15s | %10d | %16d | %9d |\n"
 
 /**
+ * TODO
+ *
+ * poslat petrovi mazani bufferu
+ * vyresit mazani (hleda to i smazane poozky nevim jak to udelat
+ * poresit struktury (ne v php standartu)
+ */
+
+/**
  * Structures 
  */
 
@@ -72,6 +80,11 @@ typedef struct {
     Condition condition;
 } SynthesizerField;
 
+typedef struct {
+    SynthesizerField result;
+    int error;  
+} SynthesizerFieldResult;
+
 /**
  * Errors
  *
@@ -85,7 +98,8 @@ const char errors[][64] = {
     "Spatna volba",
     "Doslo misto v pameti!",
     "Chyba formatu",
-    "Nepodarilo se najit prvek v poli"
+    "Nepodarilo se najit prvek v poli",
+    "Neznama polozka",
 };
 
 /**
@@ -151,7 +165,7 @@ SynthesizerArrayResult load(FILE* input)
     int analog;
     int loading_result;
 
-    while ((loading_result = fscanf(input, "%15[^|]|%15[^|]|%d|%d|%d\n",
+    while ((loading_result = fscanf(input, "%15[^|\n]|%15[^|\n]|%d|%d|%d\n",
                 array.array[array.size].name,
                 array.array[array.size].manufacturer,
                 &array.array[array.size].year,
@@ -259,7 +273,7 @@ SynthesizerArrayResult filter(SynthesizerArray list, Synthesizer key, Condition 
     int result_index = 0;
 
     for (int index = 0; index < list.size; index++) {
-        if (condition(list.array[index], key) == 0) {
+        if (!list.array[index].deleted && condition(list.array[index], key) == 0) {
             result.array[result_index] = list.array[index];
             result_index++;
         }
@@ -270,12 +284,16 @@ SynthesizerArrayResult filter(SynthesizerArray list, Synthesizer key, Condition 
         if (new == NULL) {
             return (SynthesizerArrayResult) { result, 3 };
         }
-        result.array = new; 
+        result.array = new;
+        result.size = result_index;
     }
 
     return (SynthesizerArrayResult) { result, 0 };
 }
 
+/**
+ * Comparing functions
+ */
 
 // Sorting condition for smallest year
 int byYearCondition(Synthesizer first, Synthesizer second)
@@ -347,9 +365,7 @@ void getKeyByField(SynthesizerArray list, SynthesizerField field, Synthesizer* k
             scanf("%d", &key->voices);
             break;
         case ANALOG:
-            clearBuffer();
             char analog;
-            printf("Je analogovy? y/n: ");
             scanf("%c", &analog);
             key->analog = analog == 'y';
             break;
@@ -357,12 +373,17 @@ void getKeyByField(SynthesizerArray list, SynthesizerField field, Synthesizer* k
 
 }
 
-SynthesizerField getField()
+SynthesizerFieldResult getField()
 {
     int index;
     printf("Zadej cislo polozky: ");
     scanf("%d", &index);
-    return fields[index];
+
+    if (index < 0 || index >= field_count) {
+        return (SynthesizerFieldResult) { .error = 8 };
+    }
+
+    return (SynthesizerFieldResult) { fields[index], 0 };
 }
 
 
@@ -372,14 +393,13 @@ SynthesizerResult getOldest(SynthesizerArray list)
     if (list.size == 0) {
         return (SynthesizerResult) { .error = 2 };
     }
-    Synthesizer oldest = list.array[0];
+    Synthesizer* oldest = &(list.array[0]);
     for (int index = 1; index < list.size; index++) {
-        if (list.array[index].year < oldest.year) {
-            oldest = list.array[index];
+        if (list.array[index].year < oldest->year) {
+            oldest = &(list.array[index]);
         }
     }
-
-    return (SynthesizerResult) { &oldest, 0 };
+    return (SynthesizerResult) { oldest, 0 };
 }
 
 
@@ -437,25 +457,6 @@ int sort(SynthesizerArray* list, Condition condition)
     return 0;
 }
 
-SynthesizerResult binarySearch(SynthesizerArray list, int from, int to, Synthesizer key, Condition condition)
-{
-    if (from > to) {
-        return (SynthesizerResult) { .error = 7 };
-    }
-
-    int middle = (to + from) / 2;
-
-    if (condition(list.array[middle], key) == 0) {
-        return (SynthesizerResult) { &list.array[middle], 0 };
-    }
-
-    if (condition(key, list.array[middle]) < 0) {
-        return binarySearch(list, from, middle - 1, key, condition);
-    }
-    
-    return binarySearch(list, middle + 1, to, key, condition);
-}
-
 // Searches with dialogue
 SynthesizerResult searchWithDialogue(SynthesizerArray *list)
 {
@@ -463,7 +464,13 @@ SynthesizerResult searchWithDialogue(SynthesizerArray *list)
     printf("Zadej jmeno: ");
     scanf("%15s", key.name);
 
-    return binarySearch(*list, 0, list->size - 1, key, byNameCondition);
+    SynthesizerArrayResult result = filter(*list, key, byNameCondition);
+
+    if (result.error != 0) {
+        return (SynthesizerResult) { .error = result.error };
+    }
+
+    return (SynthesizerResult) { &result.result.array[0], 0 };
 }
 
 // User interface for sorting
@@ -525,6 +532,8 @@ int addItem(SynthesizerArray* list)
     scanf("%c", &analog);
     item.analog = analog == 'y';
 
+    item.deleted = false;
+
     list->array[list->size - 1] = item;
     return 0;
 }
@@ -533,12 +542,15 @@ int addItem(SynthesizerArray* list)
 int filterDialogue(SynthesizerArray* list)
 { 
     fieldsFilterMenu();
-    SynthesizerField field = getField();
+    SynthesizerFieldResult field = getField();
+    if (field.error != 0) {
+        return field.error;
+    }
     Synthesizer key;
-    getKeyByField(*list, field, &key);
+    getKeyByField(*list, field.result, &key);
     printHead();
 
-    SynthesizerArrayResult models = filter(*list, key, field.condition);
+    SynthesizerArrayResult models = filter(*list, key, field.result.condition);
     if (models.error != 0) {
         return models.error;
     }
@@ -586,8 +598,11 @@ int edit(SynthesizerArray* list)
     Synthesizer* item = result.result;
 
     fieldsEditMenu();
-    SynthesizerField field = getField(); 
-    getKeyByField(*list, field, item);
+    SynthesizerFieldResult field = getField(); 
+    if (field.error != 0) {
+        return field.error;
+    }
+    getKeyByField(*list, field.result, item);
 
     return 0;
 }
@@ -609,12 +624,12 @@ int oldest(SynthesizerArray* list)
 {
     SynthesizerResult result = getOldest(*list);
     
-    if (result.error != -1) {
+    if (result.error != 0) {
         return result.error;
     }
 
     printHead();
-    writeOne(stdout, PRETTY_FORMAT, *result.result);
+    writeOne(stdout, PRETTY_FORMAT, *(result.result));
     return 0;
 }
 
@@ -643,20 +658,21 @@ void printMenu(void)
 // Menu interface
 void menu(SynthesizerArray* list)
 {
-    int choice = 0;
+    int choice = -1;
     do {
         clear();
         printMenu();
-        clearBuffer();
         printf("Zadej moznost: ");
-        scanf("%i", &choice);
-        if (choice == 0) {
-            return;
+        int scan_result = scanf("%i", &choice);
+        
+        if (scan_result != 1 || choice < 0 || choice > menu_items_count) {
+            error(4);
+            waitForClick();
+            continue;
         }
 
-        if (choice < 0 || choice > menu_items_count) {
-            error(4);
-            continue;
+        if (choice == 0) {
+            return;
         }
 
         int code;
@@ -693,24 +709,26 @@ int main(void)
     menu(&list);
 
     char save;
-    do {
-        clearBuffer();
-        printf("Ulozit zmeny? y/n: ");
-        scanf("%c", &save);
-        if (save == 'y') {
-            printf("Zadej jmeno souboru: ");
-            scanf("%31s", file_name);
-            FILE* file = fopen(file_name, "w");
-            if (file == NULL) {
-                free(list.array);
-                return -1;
-            }
+    clearBuffer();
+    printf("Ulozit zmeny? y/n: ");
+    scanf("%c", &save);
 
-            write(file, list, DATA_FORMAT);
-
-            fclose(file);
+    while (save != 'n') {
+        printf("Zadej jmeno souboru: ");
+        scanf("%31s", file_name);
+        FILE* file = fopen(file_name, "w");
+        if (file == NULL) {
+            free(list.array);
+            return -1;
         }
-    } while (save != 'n');
+
+        write(file, list, DATA_FORMAT);
+
+        fclose(file);
+        clearBuffer();
+        printf("Ulozit zmeny do dalsiho souboru? y/n: ");
+        scanf("%c", &save);
+    }
 
     free(list.array);
     return 0;
