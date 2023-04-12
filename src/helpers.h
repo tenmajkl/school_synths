@@ -5,16 +5,7 @@
  * In order to make errors more consistent, they are assigned to codes.
  */
 
-const char errors[][64] = {
-    "Nelze pridat prvek, v pameti je malo mista.",
-    "Pole je prazdne",
-    "Nepodarilo se vytvorit pomocne pole.",
-    "Spatna volba",
-    "Doslo misto v pameti!",
-    "Chyba formatu",
-    "Nepodarilo se najit prvek v poli",
-    "Neznama polozka",
-};
+extern const char errors[][64];
 
 /**
  * Outputs error message of given code

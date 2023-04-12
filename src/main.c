@@ -11,6 +11,7 @@
  *
  * TODO:
  *  - split it into files
+ *  - make it simpler
  */
 
 #include<stddef.h>
