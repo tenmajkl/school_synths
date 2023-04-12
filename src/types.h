@@ -10,6 +10,11 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define DATA_FORMAT "%d|%s|%s|%d|%d|%d\n"
+#define PRETTY_FORMAT "| %2d | %15s | %15s | %10d | %16d | %9d |\n"
+
+#include<stdbool.h>
+
 /**
  * Represents synth entity
  */

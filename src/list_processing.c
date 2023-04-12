@@ -1,3 +1,10 @@
+#include "list_processing.h"
+#include "types.h"
+#include "comparing.h"
+#include "lists.h"
+#include<stdlib.h>
+#include<stdio.h>
+
 // --- Filtering ---
 
 synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)

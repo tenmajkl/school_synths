@@ -1,9 +1,14 @@
-#include "actions.h"
-#include "helpers.h"
 #include<stdlib.h>
 #include<string.h>
 #include<stdio.h>
 #include<stdbool.h>
+#include "actions.h"
+#include "helpers.h"
+#include "fields.h"
+#include "lists.h"
+#include "list_processing.h"
+#include "comparing.h"
+#include "types.h"
 
 // --- Actions from menu ---
 

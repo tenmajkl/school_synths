@@ -21,9 +21,7 @@
 #include "types.h"
 #include "actions.h"
 #include "helpers.h"
-
-#define DATA_FORMAT "%d|%s|%s|%d|%d|%d\n"
-#define PRETTY_FORMAT "| %2d | %15s | %15s | %10d | %16d | %9d |\n"
+#include "lists.h"
 
 const int menu_items_count = 9;
 const action_t menu_items[] = {

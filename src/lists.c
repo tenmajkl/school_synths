@@ -1,5 +1,11 @@
 // --- Lists and structures ---
 
+#include "lists.h"
+#include "types.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
 /**
  * Loads data from file to array
  *

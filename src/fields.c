@@ -1,16 +1,10 @@
-// --- Fields ---
+#include "fields.h"
+#include "types.h"
+#include "helpers.h"
+#include "comparing.h"
+#include<stdio.h>
 
-/**
- * Fields which can be used for editing or grouping
- */
-const int field_count = 5;
-const synthesizer_field_t fields[] = {
-    { NAME, "Podle jmena", "Jmeno", "%15s", byNameCondition },
-    { MANUFACTURER, "Podle vyrobce", "Vyrobce", "%15s", byManufacturerCondition },
-    { YEAR, "Podle roku vydani", "Rok vydani", "%d", byYearCondition },
-    { VOICES, "Podle poctu hlasu", "Pocet hlasu", "%d", byVoicesCondition },
-    { ANALOG, "Podle analogovosti", "Analogovy", "%d", byAnalogCondition }
-};
+// --- Fields ---
 
 /**
  * Outputs menu for filters

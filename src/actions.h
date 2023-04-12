@@ -1,5 +1,5 @@
-#ifndef ACTIONS_H
-#define ACTIONS_H
+#ifndef ACTIONS_H_
+#define ACTIONS_H_
 
 #include "types.h"
 
