@@ -3,6 +3,7 @@
  */
 
 #include "helpers.h"
+#include "types.h"
 #include<stdio.h>
 #include<stdlib.h>
 
@@ -24,7 +25,9 @@ const char errors[][64] = {
  */
 void error(int code)
 {
-    printf("[ERROR] %s\n", errors[code - 1]);
+    COLOR(RED, { 
+        printf("[ERROR] %s\n", errors[code - 1]);
+    });
 }
 
 // --- Helpers ---
@@ -58,3 +61,4 @@ void waitForClick(void)
     puts("Zmackni enter pro pokracovani");
     getchar();
 }
+

@@ -1,6 +1,8 @@
 #ifndef ERRORS_H_
 #define ERRORS_H_
 
+#define COLOR(C, CODE) printf("\033[%im", 30 + C); CODE; printf("\033[0m");
+
 /* --- Errors ---
  * In order to make errors more consistent, they are assigned to codes.
  */

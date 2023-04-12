@@ -105,4 +105,15 @@ typedef struct {
     int error;  
 } synthesizer_field_tResult;
 
+typedef enum {
+    BLACK = 0,
+    RED = 1,
+    GREEN = 2,
+    YELLOW = 3,
+    BLUE = 4,
+    MAGENTA = 5,
+    CYAN = 6,
+    WHITE = 7,
+} color_t;
+
 #endif
