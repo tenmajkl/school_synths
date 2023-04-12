@@ -10,7 +10,6 @@
  *  - my relationship with c is love-hate
  *
  * TODO:
- *  - split it into files
  *  - make it simpler
  */
 
@@ -56,7 +55,7 @@ void menu(synthesizer_array_t* list)
     int choice = -1;
     do {
         clear();
-        printMenu();
+        COLOR(YELLOW, printMenu());
         printf("Zadej moznost: ");
         int scan_result = scanf("%i", &choice);
         

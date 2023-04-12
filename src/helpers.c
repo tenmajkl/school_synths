@@ -25,9 +25,9 @@ const char errors[][64] = {
  */
 void error(int code)
 {
-    COLOR(RED, { 
-        printf("[ERROR] %s\n", errors[code - 1]);
-    });
+    COLOR(RED, 
+        printf("[ERROR] %s\n", errors[code - 1])
+    );
 }
 
 // --- Helpers ---
@@ -62,3 +62,15 @@ void waitForClick(void)
     getchar();
 }
 
+/**
+ * Loads single value from user, even if it can't
+ */
+void input(char* message, char* format, void* pointer)
+{
+    int code;
+    do {
+        clearBuffer();
+        printf(message);
+        code = scanf(format, pointer);
+    } while (code != 1);
+}

@@ -51,19 +51,19 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
     
     switch (field.index) {
         case NAME:
-            scanf("%15s", key->name);
+            input("", "%15s", key->name);
             break;
         case MANUFACTURER:
-            scanf("%15s", key->manufacturer);
+            input("", "%15s", key->manufacturer);
             break;
         case YEAR:
-            scanf("%d", &key->year);
+            input("", "%d", &key->year);
             break;
         case VOICES:
-            scanf("%d", &key->voices);
+            input("", "%d", &key->voices);
             break;
         case ANALOG:
-            scanf("%c", &analog);
+            input("", "%c", &analog);
             key->analog = analog == 'y';
             break;
     }
@@ -76,8 +76,7 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
 synthesizer_field_tResult getField()
 {
     int index;
-    printf("Zadej cislo polozky: ");
-    scanf("%d", &index);
+    input("Zadej cislo polozky: ", "%d", &index);
 
     if (index < 0 || index >= field_count) {
         return (synthesizer_field_tResult) { .error = 8 };

@@ -245,8 +245,10 @@ int sort(synthesizer_array_t* list, condition_t condition)
 int sortDialogue(synthesizer_array_t* list, condition_t condition)
 {
     int choice;
-    printf("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ");
-    scanf("%i", &choice);
+    scanf("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ", 
+          "%i", 
+          &choice
+    );
     if (choice == 1) {
         synthesizer_array_t copied = copy(*list);
         int code;
@@ -303,8 +305,7 @@ synthesizer_result_t search(synthesizer_array_t list, synthesizer_t key, conditi
 synthesizer_result_t searchWithDialogue(synthesizer_array_t *list)
 {
     synthesizer_t key;
-    printf("Zadej id: ");
-    scanf("%d", &key.id);
+    input("Zadej id: ", "%d", &key.id);
 
     synthesizer_result_t result = search(*list, key, byIdCondition);
 

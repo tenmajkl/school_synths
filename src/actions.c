@@ -31,22 +31,17 @@ int addItemAction(synthesizer_array_t* list)
 
     synthesizer_t item;
 
-    printf("Zadej jmeno modelu: ");
-    scanf("%15s", item.name);
+    input("Zadej jmeno modelu: ", "%15s", item.name);
 
-    printf("Zadej jmeno vyrobce: ");
-    scanf("%15s", item.manufacturer);
+    input("Zadej jmeno vyrobce: ", "%15s", item.manufacturer);
 
-    printf("Zadej rok vydani: ");
-    scanf("%d", &item.year);
+    input("Zadej rok vydani: ", "%d", &item.year);
 
-    printf("Zadej pocet hlasu: ");
-    scanf("%d", &item.voices);
+    input("Zadej pocet hlasu: ", "%d", &item.voices);
 
     clearBuffer();
     char analog;
-    printf("Je analogovy? y/n: ");
-    scanf("%c", &analog);
+    input("Je analogovy? y/n: ", "%c", &analog);
     item.analog = analog == 'y';
 
     item.deleted = false;

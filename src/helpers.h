@@ -33,4 +33,9 @@ void clearBuffer(void);
  */
 void waitForClick(void);
 
+/**
+ * Loads single value from user, even if it can't
+ */
+void input(char* message, char* format, void* pointer);
+
 #endif
