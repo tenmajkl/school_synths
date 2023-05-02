@@ -3,6 +3,7 @@
 #include "lists.h"
 #include "types.h"
 #include "comparing.h"
+#include "helpers.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -123,9 +124,9 @@ int print(synthesizer_array_t* list)
 
 // --- Filtering ---
 
-synthesizer_array_pointer_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)
+synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)
 {
-    synthesizer_array_pinter_result_t result;
+    synthesizer_array_result_t result;
     result.error = 0;
     synthesizer_array_t array;
     array.capacity = list.capacity;
@@ -140,7 +141,7 @@ synthesizer_array_pointer_result_t filter(synthesizer_array_t list, synthesizer_
 
     for (int index = 0; index < list.size; index++) {
         if (!list.array[index].deleted && condition(list.array[index], key) == 0) {
-            array.array[array.size] = &list.array[index];
+            array.array[array.size] = list.array[index];
             array.size++;
         }
     }
@@ -245,7 +246,7 @@ int sort(synthesizer_array_t* list, condition_t condition)
 int sortDialogue(synthesizer_array_t* list, condition_t condition)
 {
     int choice;
-    scanf("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ", 
+    input("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ", 
           "%i", 
           &choice
     );

@@ -66,7 +66,7 @@ int filterDialogueAction(synthesizer_array_t* list)
     getKeyByField(*list, field.result, &key);
     printHead();
 
-    synthesizer_array_pointer_result_t models = filter(*list, key, field.result.condition);
+    synthesizer_array_result_t models = filter(*list, key, field.result.condition);
     if (models.error != 0) {
         return models.error;
     }

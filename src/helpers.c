@@ -70,7 +70,7 @@ void input(char* message, char* format, void* pointer)
     int code;
     do {
         clearBuffer();
-        printf(message);
+        printf("%s", message);
         code = scanf(format, pointer);
     } while (code != 1);
 }
