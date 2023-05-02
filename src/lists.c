@@ -123,14 +123,14 @@ int print(synthesizer_array_t* list)
 
 // --- Filtering ---
 
-synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)
+synthesizer_array_pointer_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)
 {
-    synthesizer_array_result_t result;
+    synthesizer_array_pinter_result_t result;
     result.error = 0;
     synthesizer_array_t array;
     array.capacity = list.capacity;
     array.size = 0;
-    array.array = malloc(list.size * sizeof(synthesizer_t));
+    array.array = malloc(list.size * sizeof(synthesizer_t*));
 
     if (array.array == NULL) {
         result.error = 2;
@@ -140,13 +140,13 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
 
     for (int index = 0; index < list.size; index++) {
         if (!list.array[index].deleted && condition(list.array[index], key) == 0) {
-            array.array[array.size] = list.array[index];
+            array.array[array.size] = &list.array[index];
             array.size++;
         }
     }
 
     if (array.size < list.size) {
-        synthesizer_t* new = realloc(array.array, array.size * sizeof(synthesizer_t));
+        synthesizer_t* new = realloc(array.array, array.size * sizeof(synthesizer_t*));
         if (new == NULL) {
             result.error = 3;
             result.result = array;

@@ -28,14 +28,28 @@ typedef struct {
     bool deleted;
 } synthesizer_t;
 
+
+/**
+ * Array of indexes of items from synth array.
+ *
+ * Its basicaly hack that allows us to return read-write array of specific data. It also takes less space, because its just integers
+ */
+typedef struct {
+    int* array;
+    int size;
+    int capacity;
+} synthesizer_index_array_t;
+
 /**
  * Represents array of synths with capacity and size
  */
 typedef struct {
-    synthesizer_t* array;
+    synthesizer_t* array; // this will be initialized only once - at loading, if we want to return only specific items
+    synthesizer_index_array_t indexes; // indexes of curently used items 
     int size;
     int capacity;
 } synthesizer_array_t;
+
 
 /**
  * Represents one item from menu
