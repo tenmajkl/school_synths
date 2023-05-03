@@ -49,7 +49,7 @@ void clear(void)
  */
 void clearBuffer(void)
 {
-    while ((getchar()) != '\n');
+    fflush(stdin);
 }
 
 /**

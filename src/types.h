@@ -117,7 +117,7 @@ typedef struct {
 typedef struct {
     synthesizer_field_t result;
     int error;  
-} synthesizer_field_tResult;
+} synthesizer_field_result_t;
 
 typedef enum {
     BLACK = 0,

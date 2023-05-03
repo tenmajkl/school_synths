@@ -58,22 +58,22 @@ int addItemAction(synthesizer_array_t* list)
 int filterDialogueAction(synthesizer_array_t* list)
 { 
     fieldsFilterMenu();
-    synthesizer_field_tResult field = getField();
+    synthesizer_field_result_t field = getField();
     if (field.error != 0) {
         return field.error;
     }
     synthesizer_t key;
     getKeyByField(*list, field.result, &key);
-    printHead();
 
     synthesizer_array_result_t models = filter(*list, key, field.result.condition);
     if (models.error != 0) {
         return models.error;
     }
     
+    printHead();
     write(stdout, models.result, PRETTY_FORMAT);
 
-    free(models.result.array);
+    free(models.result.indexes.array);
 
     return 0;
 }
@@ -123,7 +123,7 @@ int editAction(synthesizer_array_t* list)
     synthesizer_t* item = result.result;
 
     fieldsEditMenu();
-    synthesizer_field_tResult field = getField(); 
+    synthesizer_field_result_t field = getField(); 
     if (field.error != 0) {
         return field.error;
     }

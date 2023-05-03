@@ -21,7 +21,11 @@ synthesizer_array_result_t load(FILE* input)
     array.array = malloc(16 * sizeof(synthesizer_t));
     array.size = 0;
     array.capacity = 16;
+    array.indexes.array = malloc(16 * sizeof(int));
+    array.indexes.size = 0;
+    array.indexes.capacity = 16;
     synthesizer_t* new;
+    int* new_indexes;
     int analog;
     int loading_result;
 
@@ -36,7 +40,9 @@ synthesizer_array_result_t load(FILE* input)
     ) {
         array.array[array.size].analog = analog != 0;
         array.array[array.size].deleted = false;
+        array.indexes.array[array.indexes.size] = array.size;
         array.size++;
+        array.indexes.size++;
         if (array.size == array.capacity) {
             array.capacity += 16;
             new = realloc(array.array, array.capacity * sizeof(synthesizer_t));
@@ -46,6 +52,15 @@ synthesizer_array_result_t load(FILE* input)
                 return result;
             }
             array.array = new;
+
+            array.indexes.capacity += 16; 
+            new_indexes = realloc(array.indexes.array, array.capacity * sizeof(synthesizer_t));
+            if (new == NULL) {
+                result.result = array;
+                result.error = 5;
+                return result;
+            }
+            array.indexes.array = new_indexes;
         }
     }
 
@@ -74,6 +89,14 @@ synthesizer_array_t copy(synthesizer_array_t list)
     return result;
 }
 
+synthesizer_result_t get(synthesizer_array_t list, int index)
+{
+    if (index < 0 || index >= list.indexes.size) {
+        return (synthesizer_result_t) { .error = 1 };
+    }
+    return (synthesizer_result_t) { &(list.array[list.indexes.array[index]]), 0 };
+}
+
 // --- Output ---
 
 /**
@@ -90,8 +113,8 @@ void writeOne(FILE* output, char* format, synthesizer_t item)
 void write(FILE* output, synthesizer_array_t array, char* format)
 {
     synthesizer_t item;
-    for (int index = 0; index < array.size; index++) {
-        item = array.array[index];
+    for (int index = 0; index < array.indexes.size; index++) {
+        item = *get(array, index).result;
         if (item.deleted) {
             continue;
         }
@@ -131,7 +154,10 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
     synthesizer_array_t array;
     array.capacity = list.capacity;
     array.size = 0;
-    array.array = malloc(list.size * sizeof(synthesizer_t*));
+    array.array = list.array;
+    array.indexes.capacity = list.indexes.capacity;
+    array.indexes.size = 0;
+    array.indexes.array = malloc(list.indexes.capacity * sizeof(int));
 
     if (array.array == NULL) {
         result.error = 2;
@@ -141,20 +167,20 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
 
     for (int index = 0; index < list.size; index++) {
         if (!list.array[index].deleted && condition(list.array[index], key) == 0) {
-            array.array[array.size] = list.array[index];
-            array.size++;
+            array.indexes.array[array.indexes.size] = index;
+            array.indexes.size++;
         }
     }
 
     if (array.size < list.size) {
-        synthesizer_t* new = realloc(array.array, array.size * sizeof(synthesizer_t*));
+        int* new = realloc(array.indexes.array, array.indexes.size * sizeof(int));
         if (new == NULL) {
             result.error = 3;
             result.result = array;
             return result;
         }
-        array.array = new;
-        array.capacity = array.size;
+        array.indexes.array = new;
+        array.indexes.capacity = array.indexes.size;
     }
 
     result.result = array;

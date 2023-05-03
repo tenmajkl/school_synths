@@ -30,6 +30,6 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
 /**
  * Loads field from input
  */
-synthesizer_field_tResult getField();
+synthesizer_field_result_t getField();
 
 #endif

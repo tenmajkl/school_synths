@@ -45,25 +45,26 @@ void fieldsEditMenu()
  */
 void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesizer_t* key)
 {
-    printf("Zadej %s: ", field.edit_description);
+    char prompt[32];
+    sprintf(prompt, "Zadej %s: ", field.edit_description);
     clearBuffer();
     char analog;
     
     switch (field.index) {
         case NAME:
-            input("", "%15s", key->name);
+            input(prompt, "%15s", key->name);
             break;
         case MANUFACTURER:
-            input("", "%15s", key->manufacturer);
+            input(prompt, "%15s", key->manufacturer);
             break;
         case YEAR:
-            input("", "%d", &key->year);
+            input(prompt, "%d", &key->year);
             break;
         case VOICES:
-            input("", "%d", &key->voices);
+            input(prompt, "%d", &key->voices);
             break;
         case ANALOG:
-            input("", "%c", &analog);
+            input(prompt, "%c", &analog);
             key->analog = analog == 'y';
             break;
     }
@@ -73,14 +74,14 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
 /**
  * Loads field from input
  */
-synthesizer_field_tResult getField()
+synthesizer_field_result_t getField()
 {
     int index;
     input("Zadej cislo polozky: ", "%d", &index);
 
     if (index < 0 || index >= field_count) {
-        return (synthesizer_field_tResult) { .error = 8 };
+        return (synthesizer_field_result_t) { .error = 8 };
     }
 
-    return (synthesizer_field_tResult) { fields[index], 0 };
+    return (synthesizer_field_result_t) { fields[index], 0 };
 }

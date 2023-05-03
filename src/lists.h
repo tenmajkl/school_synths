@@ -18,6 +18,10 @@ synthesizer_array_result_t load(FILE* input);
  */
 synthesizer_array_t copy(synthesizer_array_t list);
 
+synthesizer_result_t get(synthesizer_array_t list, int index);
+
+int push(synthesizer_array_t* list, synthesizer_t item);
+
 // --- Output ---
 
 /**
