@@ -23,15 +23,13 @@
 #include "helpers.h"
 #include "lists.h"
 
-const int menu_items_count = 9;
+const int menu_items_count = 7;
 const action_t menu_items[] = {
     {"Vypsat data", print},
-    {"Seradit podle jmena", sortByNameAction},
-    {"Seradit podle roku vydani", sortByYearAction},
+    {"Seradit", sortAction},
     {"Filtrovat", filterDialogueAction},
     {"Najit nejstarsi syntezator", oldestAction},
     {"Pridat syntezator", addItemAction},
-    {"Najit syntezator podle id", searchDialogue},
     {"Smazat syntezator", deleteAction},
     {"Upravit syntezator", editAction},
 };

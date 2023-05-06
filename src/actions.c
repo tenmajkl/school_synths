@@ -18,16 +18,27 @@
  */
 int addItemAction(synthesizer_array_t* list)
 {
-    synthesizer_t* new;
     if (list->size == list->capacity) {
-        list->capacity++;
+        synthesizer_t* new;
+        int* new_indexes;
         new = realloc(list->array, list->size);
         if (new == NULL) {
             return 1;
         }
+
+        new_indexes = realloc(list->indexes.array, list->size);
+        if (new_indexes == NULL) {
+            return 1;
+        }
+
+        list->capacity++;
+        list->indexes.capacity++;
+
+        list->indexes.array = new_indexes;
         list->array = new;
     }
     list->size++;
+    list->indexes.size++;
 
     synthesizer_t item;
 
@@ -49,6 +60,8 @@ int addItemAction(synthesizer_array_t* list)
     item.id = list->size > 1 ? list->array[list->size - 2].id + 1 : 1;
 
     list->array[list->size - 1] = item;
+    list->indexes.array[list->indexes.size - 1] = list->size - 1;
+
     return 0;
 }
 
@@ -57,15 +70,8 @@ int addItemAction(synthesizer_array_t* list)
  */
 int filterDialogueAction(synthesizer_array_t* list)
 { 
-    fieldsFilterMenu();
-    synthesizer_field_result_t field = getField();
-    if (field.error != 0) {
-        return field.error;
-    }
-    synthesizer_t key;
-    getKeyByField(*list, field.result, &key);
-
-    synthesizer_array_result_t models = filter(*list, key, field.result.condition);
+    puts("Filtrovat podle:");
+    synthesizer_array_result_t models = filterWithDialogue(list);
     if (models.error != 0) {
         return models.error;
     }
@@ -78,35 +84,17 @@ int filterDialogueAction(synthesizer_array_t* list)
     return 0;
 }
 
-/**
- * Menu item for sorting by year
- */
-int sortByYearAction(synthesizer_array_t* list)
+int sortAction(synthesizer_array_t* list) 
 {
-    return sortDialogue(list, byYearCondition);
-}
+    puts("Seradit podle:");
+    fieldsFilterMenu();
+    synthesizer_field_result_t field = getField();
 
-/**
- * Menu item for sorting by name
- */
-int sortByNameAction(synthesizer_array_t* list)
-{
-    return sortDialogue(list, byNameCondition);
-}
-
-/**
- * Searches for given item
- */
-int searchDialogue(synthesizer_array_t *list)
-{
-    synthesizer_result_t result = searchWithDialogue(list);
-    if (result.error != 0) {
-        return result.error;
+    if (field.error != 0) {
+        return field.error;
     }
 
-    printHead();
-    writeOne(stdout, PRETTY_FORMAT, *result.result);
-    return 0;
+    return sortDialogue(list, field.result.condition);
 }
 
 /**
@@ -114,35 +102,50 @@ int searchDialogue(synthesizer_array_t *list)
  */
 int editAction(synthesizer_array_t* list)
 {
-    synthesizer_result_t result = searchWithDialogue(list);
+    puts("Vyhledat podle:");
+    synthesizer_array_result_t result = filterWithDialogue(list);
 
     if (result.error != 0) {
         return result.error;
     }
 
-    synthesizer_t* item = result.result;
+    synthesizer_array_t array = result.result;
 
-    fieldsEditMenu();
-    synthesizer_field_result_t field = getField(); 
-    if (field.error != 0) {
-        return field.error;
+    synthesizer_t *item;
+
+    for (int i = 0; i < array.indexes.size; i++) {
+        item = &array.array[array.indexes.array[i]];
+
+        printf("-- Uprava polozky s id %i --\n", item->id);
+        fieldsEditMenu();
+        
+        synthesizer_field_result_t field = getField(); 
+        if (field.error != 0) {
+            return field.error;
+        }
+
+        getKeyByField(*list, field.result, item);
     }
-    getKeyByField(*list, field.result, item);
 
     return 0;
 }
 
 /**
- * Removes given item
+ * Removes filtered items
  */
 int deleteAction(synthesizer_array_t *list)
 {
-    synthesizer_result_t result = searchWithDialogue(list);
+    puts("Vyhledat podle:");
+    synthesizer_array_result_t result = filterWithDialogue(list);
     if (result.error != 0) {
         return result.error;
     }
 
-    result.result->deleted = true;
+    synthesizer_array_t array = result.result;
+
+    for (int i = 0; i < array.indexes.size; i++) {
+        array.array[array.indexes.array[i]].deleted = true;
+    }
 
     return 0;
 }

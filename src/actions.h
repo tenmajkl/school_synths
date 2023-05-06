@@ -13,16 +13,8 @@ int addItemAction(synthesizer_array_t* list);
  */
 int filterDialogueAction(synthesizer_array_t* list);
 
-/**
- * Menu item for sorting by year
- */
-int sortByYearAction(synthesizer_array_t* list);
 
-/**
- * Menu item for sorting by name
- */
-int sortByNameAction(synthesizer_array_t* list);
-
+int sortAction(synthesizer_array_t* list);
 
 /**
  * Searches for given item

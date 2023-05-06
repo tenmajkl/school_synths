@@ -4,6 +4,8 @@
 #include<stdio.h>
 #include "types.h"
 
+#define BLOCK_LEN 16
+
 // --- Lists and structures ---
 
 /**
@@ -48,6 +50,8 @@ int print(synthesizer_array_t* list);
 
 synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition);
 
+synthesizer_array_result_t filterWithDialogue(synthesizer_array_t* list);
+
 /**
  * Returns oldest synth
  */
@@ -76,24 +80,5 @@ int sort(synthesizer_array_t* list, condition_t condition);
  * Generic user interface for sorting
  */
 int sortDialogue(synthesizer_array_t* list, condition_t condition);
-
-// --- Searching ---
-
-/**
- * Searches for item with given comparing function and key.
- *
- * Since we're not sure that the array is sorted by name,
- * binary search is not acceptable since with sorting it would be snailing slow.
- *
- * Other way of solving this would be using filter with byNameCondition and then take first element
- * However this returns array of items, not pointers, so it won't be editable 
- * and it would be even less effective than this.
- */
-synthesizer_result_t search(synthesizer_array_t list, synthesizer_t key, condition_t compare);
-
-/**
- * Dialogue over searching
- */
-synthesizer_result_t searchWithDialogue(synthesizer_array_t *list);
 
 #endif

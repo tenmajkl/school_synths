@@ -11,11 +11,11 @@
  */
 const int field_count = 5;
 const synthesizer_field_t fields[] = {
-    { NAME, "Podle jmena", "Jmeno", "%15s", byNameCondition },
-    { MANUFACTURER, "Podle vyrobce", "Vyrobce", "%15s", byManufacturerCondition },
-    { YEAR, "Podle roku vydani", "Rok vydani", "%d", byYearCondition },
-    { VOICES, "Podle poctu hlasu", "Pocet hlasu", "%d", byVoicesCondition },
-    { ANALOG, "Podle analogovosti", "Analogovy", "%d", byAnalogCondition }
+    { NAME, "jmena", "jmeno", "%15s", byNameCondition },
+    { MANUFACTURER, "vyrobce", "vyrobce", "%15s", byManufacturerCondition },
+    { YEAR, "roku vydani", "rok vydani", "%d", byYearCondition },
+    { VOICES, "poctu hlasu", "pocet hlasu", "%d", byVoicesCondition },
+    { ANALOG, "analogovosti", "analogovy", "%d", byAnalogCondition }
 };
 
 /**
@@ -33,6 +33,7 @@ void fieldsFilterMenu()
  */
 void fieldsEditMenu()
 {
+    puts("Upravit polozku:");
     for (int index = 0; index < field_count; index++) {
         printf("%d. %s\n", index, fields[index].edit_description);
     }
@@ -77,11 +78,10 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
 synthesizer_field_result_t getField()
 {
     int index;
-    input("Zadej cislo polozky: ", "%d", &index);
 
-    if (index < 0 || index >= field_count) {
-        return (synthesizer_field_result_t) { .error = 8 };
-    }
+    do {
+        input("Zadej cislo polozky: ", "%d", &index);
+    } while (index < 0 || index >= field_count);
 
     return (synthesizer_field_result_t) { fields[index], 0 };
 }

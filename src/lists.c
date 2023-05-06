@@ -1,6 +1,7 @@
 // --- Lists and structures ---
 
 #include "lists.h"
+#include "fields.h"
 #include "types.h"
 #include "comparing.h"
 #include "helpers.h"
@@ -18,12 +19,12 @@ synthesizer_array_result_t load(FILE* input)
     synthesizer_array_result_t result;
     result.error = 0; 
     synthesizer_array_t array;
-    array.array = malloc(16 * sizeof(synthesizer_t));
+    array.array = malloc(BLOCK_LEN * sizeof(synthesizer_t));
     array.size = 0;
-    array.capacity = 16;
-    array.indexes.array = malloc(16 * sizeof(int));
+    array.capacity = BLOCK_LEN;
+    array.indexes.array = malloc(BLOCK_LEN * sizeof(int));
     array.indexes.size = 0;
-    array.indexes.capacity = 16;
+    array.indexes.capacity = BLOCK_LEN;
     synthesizer_t* new;
     int* new_indexes;
     int analog;
@@ -44,7 +45,7 @@ synthesizer_array_result_t load(FILE* input)
         array.size++;
         array.indexes.size++;
         if (array.size == array.capacity) {
-            array.capacity += 16;
+            array.capacity += BLOCK_LEN;
             new = realloc(array.array, array.capacity * sizeof(synthesizer_t));
             if (new == NULL) {
                 result.result = array;
@@ -53,7 +54,7 @@ synthesizer_array_result_t load(FILE* input)
             }
             array.array = new;
 
-            array.indexes.capacity += 16; 
+            array.indexes.capacity += BLOCK_LEN; 
             new_indexes = realloc(array.indexes.array, array.capacity * sizeof(synthesizer_t));
             if (new == NULL) {
                 result.result = array;
@@ -187,6 +188,19 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
     return result;
 }
 
+synthesizer_array_result_t filterWithDialogue(synthesizer_array_t* list)
+{
+    fieldsFilterMenu();
+    synthesizer_field_result_t field = getField();
+    if (field.error != 0) {
+        return (synthesizer_array_result_t) { .error = field.error };
+    }
+    synthesizer_t key;
+    getKeyByField(*list, field.result, &key);
+
+   return filter(*list, key, field.result.condition); 
+}
+
 /**
  * Returns oldest synth
  */
@@ -289,56 +303,4 @@ int sortDialogue(synthesizer_array_t* list, condition_t condition)
     }
 
     return sort(list, condition);
-}
-
-// --- Searching ---
-
-/**
- * Searches for item with given comparing function and key.
- *
- * Since we're not sure that the array is sorted by name,
- * binary search is not acceptable since with sorting it would be snailing slow.
- *
- * Other way of solving this would be using filter with byNameCondition and then take first element
- * However this returns array of items, not pointers, so it won't be editable 
- * and it would be even less effective than this.
- */
-synthesizer_result_t search(synthesizer_array_t list, synthesizer_t key, condition_t compare)
-{
-    if (list.size == 0) {
-        return (synthesizer_result_t) { .error = 2 };
-    }
-
-    int index = 0;
-
-    while (index < list.size 
-            && (
-                compare(list.array[index], key) != 0
-                || list.array[index].deleted
-            )
-    ) {
-        index++;
-    }
-
-    return index == list.size
-        ? ((synthesizer_result_t) { .error = 7})
-        : ((synthesizer_result_t) { &list.array[index], 0})
-    ;
-}
-
-/**
- * Dialogue over searching
- */
-synthesizer_result_t searchWithDialogue(synthesizer_array_t *list)
-{
-    synthesizer_t key;
-    input("Zadej id: ", "%d", &key.id);
-
-    synthesizer_result_t result = search(*list, key, byIdCondition);
-
-    if (result.error != 0) {
-        return (synthesizer_result_t) { .error = result.error };
-    }
-
-    return (synthesizer_result_t) { result.result, 0 };
 }
