@@ -76,7 +76,7 @@ synthesizer_array_result_t load(FILE* input)
 }
 
 /**
- * Copies one list to another
+ * Returns copy of given synth array
  */
 synthesizer_array_t copy(synthesizer_array_t list)
 {
