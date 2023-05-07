@@ -152,10 +152,7 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
 {
     synthesizer_array_result_t result;
     result.error = 0;
-    synthesizer_array_t array;
-    array.capacity = list.capacity;
-    array.size = 0;
-    array.array = list.array;
+    synthesizer_array_t array = copy(list);
     array.indexes.capacity = list.indexes.capacity;
     array.indexes.size = 0;
     array.indexes.array = malloc(list.indexes.capacity * sizeof(int));

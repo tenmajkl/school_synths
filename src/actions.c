@@ -114,7 +114,7 @@ int editAction(synthesizer_array_t* list)
     synthesizer_t *item;
 
     for (int i = 0; i < array.indexes.size; i++) {
-        item = &array.array[array.indexes.array[i]];
+        item = get(array, i).result;
 
         printf("-- Uprava polozky s id %i --\n", item->id);
         fieldsEditMenu();
@@ -144,7 +144,7 @@ int deleteAction(synthesizer_array_t *list)
     synthesizer_array_t array = result.result;
 
     for (int i = 0; i < array.indexes.size; i++) {
-        array.array[array.indexes.array[i]].deleted = true;
+        get(array, i).result->deleted = true;
     }
 
     return 0;
