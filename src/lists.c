@@ -77,25 +77,24 @@ synthesizer_array_result_t load(FILE* input)
 
 /**
  * Returns copy of given synth array
+ * The trick is that it actually copies just the indexes array and the actual data remains the same
  */
 synthesizer_array_t copy(synthesizer_array_t list)
 {
     synthesizer_array_t result = list;
-    size_t size = list.size * sizeof(synthesizer_t);
-    synthesizer_t* array = malloc(size);
+    int size = list.indexes.size * sizeof(int);
+    result.indexes.array = malloc(size);
+    memcpy(result.indexes.array, list.indexes.array, size);
 
-    memcpy(array, list.array, size);
-
-    result.array = array;
     return result;
 }
 
-synthesizer_result_t get(synthesizer_array_t list, int index)
+synthesizer_result_t get(synthesizer_array_t* list, int index)
 {
-    if (index < 0 || index >= list.indexes.size) {
+    if (index < 0 || index >= list->indexes.size) {
         return (synthesizer_result_t) { .error = 1 };
     }
-    return (synthesizer_result_t) { &(list.array[list.indexes.array[index]]), 0 };
+    return (synthesizer_result_t) { &(list->array[list->indexes.array[index]]), 0 };
 }
 
 // --- Output ---
@@ -115,7 +114,7 @@ void write(FILE* output, synthesizer_array_t array, char* format)
 {
     synthesizer_t item;
     for (int index = 0; index < array.indexes.size; index++) {
-        item = *get(array, index).result;
+        item = *get(&array, index).result;
         if (item.deleted) {
             continue;
         }
@@ -152,7 +151,7 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
 {
     synthesizer_array_result_t result;
     result.error = 0;
-    synthesizer_array_t array = copy(list);
+    synthesizer_array_t array = list;
     array.indexes.capacity = list.indexes.capacity;
     array.indexes.size = 0;
     array.indexes.array = malloc(list.indexes.capacity * sizeof(int));
@@ -160,6 +159,7 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
     if (array.array == NULL) {
         result.error = 2;
         result.result = list;
+        free(array.indexes.array);
         return result;
     }
 
@@ -220,30 +220,30 @@ synthesizer_result_t getOldest(synthesizer_array_t list)
 /**
  * Merge sort melting
  */
-void melt(synthesizer_array_t* list, synthesizer_array_t* help, int from, int to, int middle, condition_t compare)
+void melt(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, int middle, condition_t compare)
 {
     int left = from, right = middle + 1, index = from;
     while (left <= middle && right <= to) {
-        if (compare(list->array[left], list->array[right]) <= 0) {
-            help->array[index++] = list->array[left++];
+        if (compare(*get(list, left).result, *get(list, right).result) <= 0) {
+            help->array[index++] = list->indexes.array[left++];
         } else {
-            help->array[index++] = list->array[right++];
+            help->array[index++] = list->indexes.array[right++];
         }
     }
 
     while (left <= middle) {
-        help->array[index++] = list->array[left++];
+        help->array[index++] = list->indexes.array[left++];
     }
 
     while (right <= to) {
-        help->array[index++] = list->array[right++];
+        help->array[index++] = list->indexes.array[right++];
     }
 }
 
 /**
  * Merge sort algorithm
  */
-void mergeSort(synthesizer_array_t* list, synthesizer_array_t* help, int from, int to, condition_t condition)
+void mergeSort(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, condition_t condition)
 {
     if (from >= to) {
         return;
@@ -256,7 +256,7 @@ void mergeSort(synthesizer_array_t* list, synthesizer_array_t* help, int from, i
     melt(list, help, from, to, middle, condition);
 
     while (from <= to) {
-        list->array[from] = help->array[from];
+        list->indexes.array[from] = help->array[from];
         from++;
     }
 }
@@ -268,15 +268,16 @@ void mergeSort(synthesizer_array_t* list, synthesizer_array_t* help, int from, i
  */
 int sort(synthesizer_array_t* list, condition_t condition)
 {
-    synthesizer_array_t help = *list;
-    help.array = malloc(help.size * sizeof(synthesizer_t));
+    synthesizer_index_array_t help;;
+    help.array = malloc(list->indexes.size * sizeof(int));
     if (help.array == NULL) {
         return 3;
     }
-    mergeSort(list, &help, 0, list->size - 1, condition);
+    mergeSort(list, &help, 0, list->indexes.size - 1, condition);
     free(help.array);
     return 0;
 }
+
 /**
  * Generic user interface for sorting
  */

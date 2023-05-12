@@ -20,7 +20,7 @@ synthesizer_array_result_t load(FILE* input);
  */
 synthesizer_array_t copy(synthesizer_array_t list);
 
-synthesizer_result_t get(synthesizer_array_t list, int index);
+synthesizer_result_t get(synthesizer_array_t* list, int index);
 
 int push(synthesizer_array_t* list, synthesizer_t item);
 
@@ -62,12 +62,12 @@ synthesizer_result_t getOldest(synthesizer_array_t list);
 /**
  * Merge sort melting
  */
-void melt(synthesizer_array_t* list, synthesizer_array_t* help, int from, int to, int middle, condition_t compare);
+void melt(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, int middle, condition_t compare);
 
 /**
  * Merge sort algorithm
  */
-void mergeSort(synthesizer_array_t* list, synthesizer_array_t* help, int from, int to, condition_t condition);
+void mergeSort(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, condition_t condition);
 
 /**
  * Sorts data using merge sort
