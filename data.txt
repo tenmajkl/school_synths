@@ -1,11 +1,11 @@
-1|Crave|Behringer|2019|1|1
-2|Volca Keys|Korg|2013|3|1
-3|Monotron Duo|Korg|2012|2|1
-4|Monotron Delay|Korg|2012|1|1
-5|PO-33 KO|TE|2018|4|0
-6|Mavis|Moog|2022|1|1
-7|Neutron|Behringer|2018|2|1
-8|Kastle|Bastl|2016|1|0
-9|MicroFreak|Arturia|2019|1|0
-10|SoftPop SP2|Bastl|2022|1|1
-11|Prophet~5|Sequential|1978|5|1
+1,Crave,Behringer,2019,1,1
+2,Volca Keys,Korg,2013,3,1
+3,Monotron Duo,Korg,2012,2,1
+4,Monotron Delay,Korg,2012,1,1
+5,PO-33 KO,TE,2018,4,0
+6,Mavis,Moog,2022,1,1
+7,Neutron,Behringer,2018,2,1
+8,Kastle,Bastl,2016,1,0
+9,MicroFreak,Arturia,2019,1,0
+10,SoftPop SP2,Bastl,2022,1,1
+11,Prophet~5,Sequential,1978,5,1

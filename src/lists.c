@@ -30,7 +30,7 @@ synthesizer_array_result_t load(FILE* input)
     int analog;
     int loading_result;
 
-    while ((loading_result = fscanf(input, "%d|%15[^|\n]|%15[^|\n]|%d|%d|%d\n",
+    while ((loading_result = fscanf(input, INPUT_FORMAT,
                 &array.array[array.size].id,
                 array.array[array.size].name,
                 array.array[array.size].manufacturer,

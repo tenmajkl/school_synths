@@ -49,7 +49,8 @@ void clear(void)
  */
 void clearBuffer(void)
 {
-    fflush(stdin);
+    while (getchar() != '\n');
+ //   fflush(stdin);
 }
 
 /**
