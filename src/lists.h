@@ -9,6 +9,14 @@
 // --- Lists and structures ---
 
 /**
+ * Loads single item to given pointer
+ * @param char* format loading format
+ * @param bool id does it load id?
+ * @param int analog_format format for loading analogness
+ */
+int loadOne(FILE* file, synthesizer_t* item, char* format, bool id, int analog_format);
+
+/**
  * Loads data from file to array
  *
  * Can return codes 5, 6, 0

@@ -42,21 +42,7 @@ int addItemAction(synthesizer_array_t* list)
     list->indexes.size++;
 
     synthesizer_t item;
-
-    input("Zadej jmeno modelu: ", "%15s", item.name);
-
-    input("Zadej jmeno vyrobce: ", "%15s", item.manufacturer);
-
-    input("Zadej rok vydani: ", "%d", &item.year);
-
-    input("Zadej pocet hlasu: ", "%d", &item.voices);
-
-    clearBuffer();
-    char analog;
-    input("Je analogovy? y/n: ", "%c", &analog);
-    item.analog = analog == 'y';
-
-    item.deleted = false;
+    int result = loadOne(stdin, &item, USER_INPUT_FORMAT, false, 'y');
 
     item.id = list->size > 1 ? list->array[list->size - 2].id + 1 : 1;
 
