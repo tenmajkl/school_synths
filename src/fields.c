@@ -53,10 +53,10 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
     
     switch (field.index) {
         case NAME:
-            input(prompt, "%15s", key->name);
+            input(prompt, "%15[\n]", key->name);
             break;
         case MANUFACTURER:
-            input(prompt, "%15s", key->manufacturer);
+            input(prompt, "%15[\n]", key->manufacturer);
             break;
         case YEAR:
             input(prompt, "%d", &key->year);
