@@ -13,7 +13,6 @@
 #define DATA_FORMAT "%d,%s,%s,%d,%d,%d\n"
 #define PRETTY_FORMAT "| %2d | %15s | %15s | %10d | %16d | %9d |\n"
 #define INPUT_FORMAT "%d,%15[^,\n],%15[^,\n],%d,%d,%d\n"
-#define USER_INPUT_FORMAT "%15[^,\n],%15[^,\n],%d,%d,%d"
 
 #include<stdbool.h>
 

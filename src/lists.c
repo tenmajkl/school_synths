@@ -10,27 +10,6 @@
 #include<string.h>
 
 /**
- * Loads single item to given pointer
- * @param char* format loading format
- * @param bool id does it load id?
- * @param int analog_format format for loading analogness
- */
-int loadOne(FILE* file, synthesizer_t* item, char* format, bool id, int analog_format)
-{
-    int analog;
-    int result = 
-        id 
-        ? fscanf(file, format, &item->id, item->name, item->manufacturer, &item->year, &item->voices, &analog) 
-        : fscanf(file, format, item->name, item->manufacturer, &item->year, &item->voices, &analog)
-    ;
-
-    item->analog = analog == analog_format;
-    item->deleted = false;
-
-    return result;
-}
-
-/**
  * Loads data from file to array
  *
  * Can return codes 5, 6, 0
@@ -48,9 +27,20 @@ synthesizer_array_result_t load(FILE* input)
     array.indexes.capacity = BLOCK_LEN;
     synthesizer_t* new;
     int* new_indexes;
+    int analog;
     int loading_result;
 
-    while ((loading_result = loadOne(input, &array.array[array.size], INPUT_FORMAT, true, 1)) == 6) {
+    while ((loading_result = fscanf(input, INPUT_FORMAT,
+                &array.array[array.size].id,
+                array.array[array.size].name,
+                array.array[array.size].manufacturer,
+                &array.array[array.size].year,
+                &array.array[array.size].voices,
+                &analog
+            )) == 6
+    ) {
+        array.array[array.size].analog = analog != 0;
+        array.array[array.size].deleted = false;
         array.indexes.array[array.indexes.size] = array.size;
         array.size++;
         array.indexes.size++;
