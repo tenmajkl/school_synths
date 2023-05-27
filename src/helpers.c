@@ -16,6 +16,7 @@ const char errors[][64] = {
     "Chyba formatu",
     "Nepodarilo se najit prvek v poli",
     "Neznama polozka",
+    "Konec nacitani", // dont print
 };
 
 /**
@@ -49,8 +50,8 @@ void clear(void)
  */
 void clearBuffer(void)
 {
-    while (getchar() != '\n');
- //   fflush(stdin);
+//    while (getchar() != '\n');
+    fflush(stdin);
 }
 
 /**

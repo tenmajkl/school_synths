@@ -24,8 +24,9 @@ const synthesizer_field_t fields[] = {
 void fieldsFilterMenu()
 {
     for (int index = 0; index < field_count; index++) {
-        printf("%d. %s\n", index, fields[index].filter_description);
+        printf("%d. %s\n", index + 1, fields[index].filter_description);
     }
+    puts("Pro ukonceni napis 0");
 }
 
 /**
@@ -35,8 +36,9 @@ void fieldsEditMenu()
 {
     puts("Upravit polozku:");
     for (int index = 0; index < field_count; index++) {
-        printf("%d. %s\n", index, fields[index].edit_description);
+        printf("%d. %s\n", index + 1, fields[index].edit_description);
     }
+    puts("Pro ukonceni napis 0");
 }
 
 /**
@@ -53,10 +55,10 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
     
     switch (field.index) {
         case NAME:
-            input(prompt, "%15[\n]", key->name);
+            input(prompt, "%15[^\n]", key->name);
             break;
         case MANUFACTURER:
-            input(prompt, "%15[\n]", key->manufacturer);
+            input(prompt, "%15[^\n]", key->manufacturer);
             break;
         case YEAR:
             input(prompt, "%d", &key->year);
@@ -81,7 +83,10 @@ synthesizer_field_result_t getField()
 
     do {
         input("Zadej cislo polozky: ", "%d", &index);
-    } while (index < 0 || index >= field_count);
+        if (index == 0) {
+            return (synthesizer_field_result_t) { .error = 9 };
+        }
+    } while (index < 1 || index > field_count);
 
-    return (synthesizer_field_result_t) { fields[index], 0 };
+    return (synthesizer_field_result_t) { fields[index - 1], 0 };
 }

@@ -192,10 +192,11 @@ synthesizer_array_result_t filterWithDialogue(synthesizer_array_t* list)
     if (field.error != 0) {
         return (synthesizer_array_result_t) { .error = field.error };
     }
+
     synthesizer_t key;
     getKeyByField(*list, field.result, &key);
 
-   return filter(*list, key, field.result.condition); 
+    return filter(*list, key, field.result.condition); 
 }
 
 /**
@@ -218,7 +219,7 @@ synthesizer_result_t getOldest(synthesizer_array_t list)
 // --- Sorting ---
 
 /**
- * Merge sort melting
+ * Merge sort melting function
  */
 void melt(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, int middle, condition_t compare)
 {
@@ -241,7 +242,7 @@ void melt(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, 
 }
 
 /**
- * Merge sort algorithm
+ * Merge sort algorithm for sorting indexes
  */
 void mergeSort(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, condition_t condition)
 {
@@ -262,9 +263,7 @@ void mergeSort(synthesizer_array_t* list, synthesizer_index_array_t* help, int f
 }
 
 /**
- * Sorts data using merge sort
- *
- * Basicaly helper for sorting which makes it simpler to work with
+ * Sorts indexes of list by given condition
  */
 int sort(synthesizer_array_t* list, condition_t condition)
 {
@@ -296,7 +295,7 @@ int sortDialogue(synthesizer_array_t* list, condition_t condition)
         }
         printHead();
         write(stdout, copied, PRETTY_FORMAT);
-        free(copied.array);
+        free(copied.indexes.array);
         return 0;
     }
 

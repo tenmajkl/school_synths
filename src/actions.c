@@ -43,9 +43,9 @@ int addItemAction(synthesizer_array_t* list)
 
     synthesizer_t item;
 
-    input("Zadej jmeno modelu: ", "%15s", item.name);
+    input("Zadej jmeno modelu: ", "%15[^\n]", item.name);
 
-    input("Zadej jmeno vyrobce: ", "%15s", item.manufacturer);
+    input("Zadej jmeno vyrobce: ", "%15[^\n]", item.manufacturer);
 
     input("Zadej rok vydani: ", "%d", &item.year);
 
@@ -73,6 +73,11 @@ int filterDialogueAction(synthesizer_array_t* list)
 { 
     puts("Filtrovat podle:");
     synthesizer_array_result_t models = filterWithDialogue(list);
+    
+    if (models.error == 9) {
+        return 0;
+    }
+
     if (models.error != 0) {
         return models.error;
     }
@@ -90,6 +95,10 @@ int sortAction(synthesizer_array_t* list)
     puts("Seradit podle:");
     fieldsFilterMenu();
     synthesizer_field_result_t field = getField();
+
+    if (field.error == 9) {
+        return 0;
+    }
 
     if (field.error != 0) {
         return field.error;
@@ -117,15 +126,20 @@ int editAction(synthesizer_array_t* list)
     for (int i = 0; i < array.indexes.size; i++) {
         item = get(&array, i).result;
 
-        printf("-- Uprava polozky s id %i --\n", item->id);
+        printf("Uprava nasledujici polozky:\n");
+        printHead();
+        writeOne(stdout, PRETTY_FORMAT, *item);
         fieldsEditMenu();
         
         synthesizer_field_result_t field = getField(); 
-        if (field.error != 0) {
-            return field.error;
-        }
+        while (field.error != 9) {
+            if (field.error != 0) {
+                return field.error;
+            }
 
-        getKeyByField(*list, field.result, item);
+            getKeyByField(*list, field.result, item);
+            field = getField();
+        }
     }
 
     return 0;
@@ -143,9 +157,18 @@ int deleteAction(synthesizer_array_t *list)
     }
 
     synthesizer_array_t array = result.result;
+    synthesizer_t *item;
+    char anwser;
 
     for (int i = 0; i < array.indexes.size; i++) {
-        get(&array, i).result->deleted = true;
+        item = get(&array, i).result;
+        printf("Chces smazat nasledujici polozku? (y/n)\n");
+        printHead();
+        writeOne(stdout, PRETTY_FORMAT, *item);
+        input("> ", "%c", &anwser);
+        if (anwser == 'y') {
+            item->deleted = true;
+        }
     }
 
     return 0;
