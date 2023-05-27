@@ -21,14 +21,17 @@ void fieldsFilterMenu();
 void fieldsEditMenu();
 
 /**
- * Loads given value to given key from user 
+ * loads value to given synthesizer to given field represented by synthesizer_field_t
  *
- * This allows us to dynamicaly edit and create keys for filtering
+ * @param synthesizer_field_t field field which value will be loaded
+ * @param synthesizer_t* key synthesizer where value will be stored
  */
-void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesizer_t* key);
+void getKeyByField(synthesizer_field_t field, synthesizer_t* key);
 
 /**
- * Loads field from input
+ * Returns user selected field
+ *
+ * @return synthesizer_field_result_t field with error code 0 or 9
  */
 synthesizer_field_result_t getField();
 

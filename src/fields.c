@@ -1,3 +1,11 @@
+/**
+ * Synths - fields
+ *
+ * @author Michal Kripac
+ * @year 2023
+ * @license GPL3 
+ */
+
 #include "fields.h"
 #include "types.h"
 #include "helpers.h"
@@ -7,7 +15,7 @@
 // --- Fields ---
 
 /**
- * Fields which can be used for editing or grouping
+ * Definitions of fields which can be used for filtering, editing and other stuff
  */
 const int field_count = 5;
 const synthesizer_field_t fields[] = {
@@ -19,9 +27,9 @@ const synthesizer_field_t fields[] = {
 };
 
 /**
- * Outputs menu for filters
+ * Outputs menu for filtering fields
  */
-void fieldsFilterMenu()
+void fieldsFilterMenu(void)
 {
     for (int index = 0; index < field_count; index++) {
         printf("%d. %s\n", index + 1, fields[index].filter_description);
@@ -30,9 +38,9 @@ void fieldsFilterMenu()
 }
 
 /**
- * Outputs menu for editing
+ * Outputs menu for editing fields
  */
-void fieldsEditMenu()
+void fieldsEditMenu(void)
 {
     puts("Upravit polozku:");
     for (int index = 0; index < field_count; index++) {
@@ -42,11 +50,12 @@ void fieldsEditMenu()
 }
 
 /**
- * Loads given value to given key from user 
+ * loads value to given synthesizer to given field represented by synthesizer_field_t
  *
- * This allows us to dynamicaly edit and create keys for filtering
+ * @param synthesizer_field_t field field which value will be loaded
+ * @param synthesizer_t* key synthesizer where value will be stored
  */
-void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesizer_t* key)
+void getKeyByField(synthesizer_field_t field, synthesizer_t* key)
 {
     char prompt[32];
     sprintf(prompt, "Zadej %s: ", field.edit_description);
@@ -75,9 +84,11 @@ void getKeyByField(synthesizer_array_t list, synthesizer_field_t field, synthesi
 }
 
 /**
- * Loads field from input
+ * Returns user selected field
+ *
+ * @return synthesizer_field_result_t field with error code 0 or 9
  */
-synthesizer_field_result_t getField()
+synthesizer_field_result_t getField(void)
 {
     int index;
 

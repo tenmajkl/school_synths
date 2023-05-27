@@ -1,4 +1,11 @@
-// --- Actions from menu ---
+/**
+ * Synths - actions
+ *
+ * @author Michal Kripac
+ * @year 2023
+ * @license GPL3 
+ */
+
 #include "actions.h"
 #include "lists.h"
 
@@ -14,7 +21,10 @@
 
 
 /**
- * Adds item to list
+ * Asks for item description and ats it to given list. When list capacity is full, it reallocates the list with bigger capacity
+ *
+ * @param synthesizer_array_t* list list where item will be added
+ * @return int error code 1 or 0
  */
 int addItemAction(synthesizer_array_t* list)
 {
@@ -67,7 +77,11 @@ int addItemAction(synthesizer_array_t* list)
 }
 
 /**
- * Prints models from loaded manufacturer
+ * Asks for field, its value and then prints all items where field has given value
+ *
+ * @see lists.c
+ * @param synthesizer_array_t* list list which will be used for filtration
+ * @return int error code 0, 2 or 3 
  */
 int filterDialogueAction(synthesizer_array_t* list)
 { 
@@ -90,6 +104,13 @@ int filterDialogueAction(synthesizer_array_t* list)
     return 0;
 }
 
+/**
+ * Asks for field used for sorting and uses it to sort given list using sortDialogue
+ *
+ * @see lists.c
+ * @param synthesizer_array_t* list list which will be sorted
+ * @return int error code 0, 5 or 3 
+ */
 int sortAction(synthesizer_array_t* list) 
 {
     puts("Seradit podle:");
@@ -104,11 +125,41 @@ int sortAction(synthesizer_array_t* list)
         return field.error;
     }
 
-    return sortDialogue(list, field.result.condition);
+    int choice;
+    input("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ", 
+          "%i", 
+          &choice
+    );
+    if (choice == 1) {
+        synthesizer_array_result_t copied_r = copy(*list);
+
+        if (copied_r.error != 0) {
+            return copied_r.error;
+        }
+
+        synthesizer_array_t copied = copied_r.result;
+
+        int code;
+        if ((code = sort(&copied, field.result.condition)) != 0) {
+            return code;
+        }
+        printHead();
+        write(stdout, copied, PRETTY_FORMAT);
+        free(copied.indexes.array);
+        return 0;
+    }
+
+    return sort(list, field.result.condition);
 }
 
 /**
- * Edits given item
+ * Using filterWithDialogue finds items which will then be edited by user.
+ *     Every item is printed and user can choose which fields to edit separately.
+ *
+ * @see fields.c for editing fields
+ * @see lists.c for filtering
+ * @param synthesizer_array_t* list list which will be edited 
+ * @return int error code 0, 2 or 3 
  */
 int editAction(synthesizer_array_t* list)
 {
@@ -137,7 +188,7 @@ int editAction(synthesizer_array_t* list)
                 return field.error;
             }
 
-            getKeyByField(*list, field.result, item);
+            getKeyByField(field.result, item);
             field = getField();
         }
     }
@@ -146,7 +197,12 @@ int editAction(synthesizer_array_t* list)
 }
 
 /**
- * Removes filtered items
+ * Using filterWithDialogue finds items which will then be deleted by user.
+ *     Every item is printed and user can choose whenever they want to delete it.
+ *
+ * @see lists.c for filtering
+ * @param synthesizer_array_t* list list which will be deleted from
+ * @return int error code 0, 2 or 3
  */
 int deleteAction(synthesizer_array_t *list)
 {
@@ -174,7 +230,13 @@ int deleteAction(synthesizer_array_t *list)
     return 0;
 }
 
-// Outputs oldest item
+/**
+ * Prints oldest item in given list
+ *
+ * @see lists.c
+ * @param synthesizer_array_t* list list which will be used for finding oldest item
+ * @return int error code 0 or 2
+ */
 int oldestAction(synthesizer_array_t* list)
 {
     synthesizer_result_t result = getOldest(*list);

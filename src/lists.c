@@ -1,4 +1,10 @@
-// --- Lists and structures ---
+/**
+ * Synths - lists
+ *
+ * @author Michal Kripac
+ * @year 2023
+ * @license GPL3 
+ */
 
 #include "lists.h"
 #include "fields.h"
@@ -11,8 +17,9 @@
 
 /**
  * Loads data from file to array
- *
- * Can return codes 5, 6, 0
+ * 
+ * @param FILE* input input file
+ * @return synthesizer_array_result_t with codes 5, 6 or 0
  */
 synthesizer_array_result_t load(FILE* input)
 {
@@ -77,18 +84,32 @@ synthesizer_array_result_t load(FILE* input)
 
 /**
  * Returns copy of given synth array
- * The trick is that it actually copies just the indexes array and the actual data remains the same
+ *     The trick is that it actually copies just the indexes array and the actual data remains the same
+ *
+ * @param synthesizer_array_t list list to be copied
+ * @return synthesizer_array_result_t with codes 5 or 0
  */
-synthesizer_array_t copy(synthesizer_array_t list)
+synthesizer_array_result_t copy(synthesizer_array_t list)
 {
     synthesizer_array_t result = list;
     int size = list.indexes.size * sizeof(int);
-    result.indexes.array = malloc(size);
+    int* new = malloc(size);
+    if (new == NULL) {
+        return (synthesizer_array_result_t) { .error = 5 };
+    }
+    result.indexes.array = new;
     memcpy(result.indexes.array, list.indexes.array, size);
 
-    return result;
+    return (synthesizer_array_result_t) { result, 0 };
 }
 
+/**
+ * Returns item from list at given index respecting array of indexes
+ * 
+ * @param synthesizer_array_t* list list which contains the item to be returned
+ * @param int index index of the item to be returned
+ * @return synthesizer_result_t with codes 1 or 0
+ */
 synthesizer_result_t get(synthesizer_array_t* list, int index)
 {
     if (index < 0 || index >= list->indexes.size) {
@@ -101,6 +122,10 @@ synthesizer_result_t get(synthesizer_array_t* list, int index)
 
 /**
  * Outputs one item to dedicated file with given format string
+ *
+ * @param FILE* output output file
+ * @param char* format format string
+ * @param synthesizer_t item item to be printed
  */
 void writeOne(FILE* output, char* format, synthesizer_t item)
 {
@@ -109,6 +134,10 @@ void writeOne(FILE* output, char* format, synthesizer_t item)
 
 /** 
  * Outputs list to dedicated file with given format string
+ *
+ * @param FILE* output output file
+ * @param synthesizer_array_t array array to be printed
+ * @param char* format format string
  */
 void write(FILE* output, synthesizer_array_t array, char* format)
 {
@@ -137,6 +166,9 @@ void printHead()
 
 /**
  * Prints whole list to stdout with pretty format
+ *
+ * @param synthesizer_array_t* list list to be printed
+ * @return int 0 - error code of success
  */
 int print(synthesizer_array_t* list)
 {
@@ -147,6 +179,14 @@ int print(synthesizer_array_t* list)
 
 // --- Filtering ---
 
+/**
+ * Filters list by given condition and key and returns filtered values as array
+ *
+ * @param synthesizer_array_t list list to be filtered
+ * @param synthesizer_t key key to be filtered by, only one field should be used
+ * @param condition_t condition condition to be used for filtering, must compare the only filled field given synthesizer has
+ * @return synthesizer_array_result_t array containing only filtered items with codes 0, 2 or 3
+ */
 synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, condition_t condition)
 {
     synthesizer_array_result_t result;
@@ -185,6 +225,12 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
     return result;
 }
 
+/**
+ * Extension of function filter with dialogue for choosing field and condition along with creating key item
+ *
+ * @param synthesizer_array_t* list list to be filtered
+ * @return synthesizer_array_result_t array containing only filtered items with codes 0, 2, 3 or 9
+ */
 synthesizer_array_result_t filterWithDialogue(synthesizer_array_t* list)
 {
     fieldsFilterMenu();
@@ -194,13 +240,16 @@ synthesizer_array_result_t filterWithDialogue(synthesizer_array_t* list)
     }
 
     synthesizer_t key;
-    getKeyByField(*list, field.result, &key);
+    getKeyByField(field.result, &key);
 
     return filter(*list, key, field.result.condition); 
 }
 
 /**
  * Returns oldest synth
+ *
+ * @param synthesizer_array_t list list to be searched
+ * @return synthesizer_result_t oldest synthesizer with codes 0 or 2
  */
 synthesizer_result_t getOldest(synthesizer_array_t list)
 {
@@ -219,7 +268,15 @@ synthesizer_result_t getOldest(synthesizer_array_t list)
 // --- Sorting ---
 
 /**
- * Merge sort melting function
+ * Merge sort melting function.
+ *    It should be called only from mergeSort function.
+ *
+ * @param synthesizer_array_t* list list to be sorted
+ * @param synthesizer_index_array_t* help helper array for sorting
+ * @param int from start index
+ * @param int to end index
+ * @param int middle middle index
+ * @param condition_t compare function for comparing two items
  */
 void melt(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, int middle, condition_t compare)
 {
@@ -242,7 +299,13 @@ void melt(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, 
 }
 
 /**
- * Merge sort algorithm for sorting indexes
+ * Merge sort algorithm for sorting indexes by values on those indexes
+ *
+ * @param synthesizer_array_t* list list to be sorted
+ * @param synthesizer_index_array_t* help heling array for sorting
+ * @param int from starting index
+ * @param int to ending index
+ * @param condition_t condition condition to be used for sorting
  */
 void mergeSort(synthesizer_array_t* list, synthesizer_index_array_t* help, int from, int to, condition_t condition)
 {
@@ -263,7 +326,12 @@ void mergeSort(synthesizer_array_t* list, synthesizer_index_array_t* help, int f
 }
 
 /**
- * Sorts indexes of list by given condition
+ * Sorts indexes of list by given condition.
+ *     Its based on function mergeSort, but creates helper array for sorting and fills other arguments of the function.
+ *
+ * @param synthesizer_array_t* list list to be sorted
+ * @param condition_t condition condition to be used for sorting
+ * @return int codes 0 or 3
  */
 int sort(synthesizer_array_t* list, condition_t condition)
 {
@@ -275,29 +343,4 @@ int sort(synthesizer_array_t* list, condition_t condition)
     mergeSort(list, &help, 0, list->indexes.size - 1, condition);
     free(help.array);
     return 0;
-}
-
-/**
- * Generic user interface for sorting
- */
-int sortDialogue(synthesizer_array_t* list, condition_t condition)
-{
-    int choice;
-    input("Chces data jen vypsat (1), nebo i ulozit (2)? Pozn. pouze vypsani zabere vice pameti. ", 
-          "%i", 
-          &choice
-    );
-    if (choice == 1) {
-        synthesizer_array_t copied = copy(*list);
-        int code;
-        if ((code = sort(&copied, condition)) != 0) {
-            return code;
-        }
-        printHead();
-        write(stdout, copied, PRETTY_FORMAT);
-        free(copied.indexes.array);
-        return 0;
-    }
-
-    return sort(list, condition);
 }

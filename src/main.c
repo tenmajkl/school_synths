@@ -1,16 +1,9 @@
 /**
- * Synths
+ * Synths - main
  *
  * @author Michal Kripac
  * @year 2023
- * @license GPL3
- * 
- * Notes:
- *  - shoegaze is based
- *  - my relationship with c is love-hate
- *
- * TODO:
- *  - make it simpler
+ * @license GPL3 
  */
 
 #include<stddef.h>
@@ -23,6 +16,9 @@
 #include "helpers.h"
 #include "lists.h"
 
+/**
+ * Menu items
+ */
 const int menu_items_count = 7;
 const action_t menu_items[] = {
     {"Vypsat data", print},
@@ -37,11 +33,11 @@ const action_t menu_items[] = {
 /**
  * Prints menu to stdout
  */
-void printMenu(void)
+void printMenu(color_t color)
 {
     printf("0: Ukoncit\n");
     for (int index = 0; index < menu_items_count; index++) {
-        printf("%i: %s\n", index+1, menu_items[index].description);
+        printfc(color, "%i: %s\n", index+1, menu_items[index].description);
     }
 }
 
@@ -53,7 +49,7 @@ void menu(synthesizer_array_t* list)
     int choice = -1;
     do {
         clear();
-        COLOR(YELLOW, printMenu());
+        printMenu(YELLOW);
         printf("Zadej moznost: ");
         int scan_result = scanf("%i", &choice);
         

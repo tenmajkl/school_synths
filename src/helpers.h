@@ -1,25 +1,31 @@
 #ifndef ERRORS_H_
 #define ERRORS_H_
 
-#define COLOR(C, CODE) printf("\033[%im", 30 + C); CODE; printf("\033[0m");
-
 /* --- Errors ---
  * In order to make errors more consistent, they are assigned to codes.
  */
 
+#include "types.h"
 extern const char errors[][64];
+
+/**
+ * Printf with colors.
+ *
+ * @param color_t color color the output text will have
+ */
+void printfc(color_t color, const char* format, ...);
 
 /**
  * Outputs error message of given code
  *
- * @param code Code of error from errors array
+ * @param code code of error from errors array
  */
 void error(int code);
 
 // --- Helpers ---
 
 /**
- * Clears screen depending on curent OS
+ * Clears screen 
  */
 void clear(void);
 
@@ -34,7 +40,11 @@ void clearBuffer(void);
 void waitForClick(void);
 
 /**
- * Loads single value from user, even if it can't
+ * Loads single value from user, when the value is not valid, it tries again
+ *
+ * @param char* message prompt that wil be printed before loading
+ * @param char* format loading format
+ * @param void* pointer variable which will be loaded
  */
 void input(char* message, char* format, void* pointer);
 

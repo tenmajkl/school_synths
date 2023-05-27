@@ -1,12 +1,20 @@
-/* --- Errors ---
- * In order to make errors more consistent, they are assigned to codes.
+/**
+ * Synths - helpers
+ *
+ * @author Michal Kripac
+ * @year 2023
+ * @license GPL3 
  */
 
 #include "helpers.h"
 #include "types.h"
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdarg.h>
 
+/**
+ * Error messages
+ */
 const char errors[][64] = {
     "Nelze pridat prvek, v pameti je malo mista.",
     "Pole je prazdne",
@@ -20,21 +28,34 @@ const char errors[][64] = {
 };
 
 /**
+ * Printf with colors.
+ *
+ * @param color_t color color the output text will have
+ */
+void printfc(color_t color, const char* format, ...)
+{
+    printf("\033[%dm", color);
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    printf("\033[0m");
+}
+
+/**
  * Outputs error message of given code
  *
- * @param code Code of error from errors array
+ * @param code code of error from errors array
  */
 void error(int code)
 {
-    COLOR(RED, 
-        printf("[ERROR] %s\n", errors[code - 1])
-    );
+    printfc(RED, "[ERROR] %s\n", errors[code - 1]);
 }
 
 // --- Helpers ---
 
 /**
- * Clears screen depending on curent OS
+ * Clears screen
  */
 void clear(void)
 {
@@ -65,7 +86,11 @@ void waitForClick(void)
 }
 
 /**
- * Loads single value from user, even if it can't
+ * Loads single value from user, when the value is not valid, it tries again
+ *
+ * @param char* message prompt that wil be printed before loading
+ * @param char* format loading format
+ * @param void* pointer variable which will be loaded
  */
 void input(char* message, char* format, void* pointer)
 {
