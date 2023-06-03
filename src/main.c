@@ -64,6 +64,7 @@ void menu(synthesizer_array_t* list)
         }
 
         int code;
+        clear();
         if ((code = menu_items[choice - 1].function(list)) != 0) {
             error(code);
         }

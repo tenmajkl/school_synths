@@ -209,6 +209,12 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
     array.indexes.size = 0;
     array.indexes.array = malloc(list.indexes.capacity * sizeof(int));
 
+    if (array.indexes.array == NULL) {
+        result.error = 3;
+        result.result = list;
+        return result;
+    }
+
     if (array.array == NULL) {
         result.error = 2;
         result.result = list;
@@ -223,7 +229,7 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
         }
     }
 
-    if (array.size < list.size) {
+    if (array.indexes.size < list.indexes.size) {
         int* new = realloc(array.indexes.array, array.indexes.size * sizeof(int));
         if (new == NULL) {
             result.error = 3;

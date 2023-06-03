@@ -96,8 +96,7 @@ int filterDialogueAction(synthesizer_array_t* list)
         return models.error;
     }
     
-    printHead();
-    write(stdout, models.result, PRETTY_FORMAT);
+    print(&models.result);
 
     free(models.result.indexes.array);
 
@@ -143,8 +142,7 @@ int sortAction(synthesizer_array_t* list)
         if ((code = sort(&copied, field.result.condition)) != 0) {
             return code;
         }
-        printHead();
-        write(stdout, copied, PRETTY_FORMAT);
+        print(&copied);
         free(copied.indexes.array);
         return 0;
     }
