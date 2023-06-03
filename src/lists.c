@@ -27,9 +27,22 @@ synthesizer_array_result_t load(FILE* input)
     result.error = 0; 
     synthesizer_array_t array;
     array.array = malloc(BLOCK_LEN * sizeof(synthesizer_t));
+    if (array.array == NULL) {
+        result.result = array;
+        result.error = 5;
+        return result;
+    }
+
     array.size = 0;
     array.capacity = BLOCK_LEN;
     array.indexes.array = malloc(BLOCK_LEN * sizeof(int));
+    if (array.indexes.array == NULL) {
+        free(array.array);
+        result.result = array;
+        result.error = 5;
+        return result;
+    }
+
     array.indexes.size = 0;
     array.indexes.capacity = BLOCK_LEN;
     synthesizer_t* new;

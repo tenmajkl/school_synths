@@ -16,7 +16,7 @@
  * Error messages
  */
 const char errors[][64] = {
-    "Nelze pridat prvek, v pameti je malo mista.",
+    "Nelze pridat prvek - v pameti je malo mista.",
     "Pole je prazdne",
     "Nepodarilo se vytvorit pomocne pole.",
     "Spatna volba",
