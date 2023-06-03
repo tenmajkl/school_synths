@@ -16,15 +16,16 @@
  * Error messages
  */
 const char errors[][64] = {
-    "Nelze pridat prvek - v pameti je malo mista.",
+    "Nelze pridat prvek - v pameti je malo mista",
     "Pole je prazdne",
-    "Nepodarilo se vytvorit pomocne pole.",
+    "Nepodarilo se vytvorit pomocne pole",
     "Spatna volba",
     "Doslo misto v pameti!",
     "Chyba formatu",
     "Nepodarilo se najit prvek v poli",
     "Neznama polozka",
-    "Konec nacitani", // dont print
+    "Zastaveno uzivatelem", // dont print
+    "Soubor neexistuje",
 };
 
 /**
@@ -34,7 +35,7 @@ const char errors[][64] = {
  */
 void printfc(color_t color, const char* format, ...)
 {
-    printf("\033[%dm", color);
+    printf("\033[%dm", 30 + color);
     va_list args;
     va_start(args, format);
     vprintf(format, args);

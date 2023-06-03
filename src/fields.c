@@ -19,11 +19,11 @@
  */
 const int field_count = 5;
 const synthesizer_field_t fields[] = {
-    { NAME, "jmena", "jmeno", "%15s", byNameCondition },
-    { MANUFACTURER, "vyrobce", "vyrobce", "%15s", byManufacturerCondition },
-    { YEAR, "roku vydani", "rok vydani", "%d", byYearCondition },
-    { VOICES, "poctu hlasu", "pocet hlasu", "%d", byVoicesCondition },
-    { ANALOG, "analogovosti", "analogovy", "%d", byAnalogCondition }
+    { NAME, "jmena", "jmeno", byNameCondition },
+    { MANUFACTURER, "vyrobce", "vyrobce", byManufacturerCondition },
+    { YEAR, "roku vydani", "rok vydani", byYearCondition },
+    { VOICES, "poctu hlasu", "pocet hlasu", byVoicesCondition },
+    { ANALOG, "analogovosti", "analogovy", byAnalogCondition }
 };
 
 /**

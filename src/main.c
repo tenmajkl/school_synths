@@ -35,7 +35,7 @@ const action_t menu_items[] = {
  */
 void printMenu(color_t color)
 {
-    printf("0: Ukoncit\n");
+    printfc(color, "0: Ukoncit\n");
     for (int index = 0; index < menu_items_count; index++) {
         printfc(color, "%i: %s\n", index+1, menu_items[index].description);
     }
@@ -80,6 +80,7 @@ int main(void)
 
     FILE* file = fopen(file_name, "r");
     if (file == NULL) {
+        error(10);
         return -1;
     }
     synthesizer_array_result_t loaded = load(file);

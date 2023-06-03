@@ -1,10 +1,9 @@
 /**
- * Types
+ * Synths - types
  *
- * This file contains all types used in program
- *
- * Why?
- * Because it was easiest to split from main.c and its more organized
+ * @author Michal Kripac
+ * @year 2023
+ * @license GPL3 
  */
 
 #ifndef TYPES_H
@@ -108,7 +107,6 @@ typedef struct {
     synthesizer_field_index_t index;
     char* filter_description;
     char* edit_description;
-    char* scanf_format;
     condition_t condition;
 } synthesizer_field_t;
 
