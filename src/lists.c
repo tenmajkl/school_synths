@@ -208,7 +208,6 @@ synthesizer_array_result_t filter(synthesizer_array_t list, synthesizer_t key, c
     array.indexes.capacity = list.indexes.capacity;
     array.indexes.size = 0;
     array.indexes.array = malloc(list.indexes.capacity * sizeof(int));
-
     if (array.indexes.array == NULL) {
         result.error = 3;
         result.result = list;

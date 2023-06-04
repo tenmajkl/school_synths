@@ -87,6 +87,12 @@ int main(void)
     synthesizer_array_result_t loaded = load(file);
 
     if (loaded.error != 0) {
+        if (loaded.result.array == NULL 
+            || loaded.result.indexes.array == NULL
+        ) {
+            fclose(file);
+            return -1;
+        }
         error(loaded.error);
         waitForClick();
     }
