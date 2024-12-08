@@ -1,0 +1,9 @@
+actions.o: src/actions.c src/actions.h src/types.h src/lists.h \
+ src/helpers.h src/fields.h src/comparing.h
+comparing.o: src/comparing.c src/comparing.h src/types.h
+fields.o: src/fields.c src/fields.h src/types.h src/comparing.h \
+ src/helpers.h
+helpers.o: src/helpers.c src/helpers.h src/types.h
+lists.o: src/lists.c src/lists.h src/types.h src/fields.h src/comparing.h \
+ src/helpers.h
+main.o: src/main.c src/types.h src/actions.h src/helpers.h src/lists.h
