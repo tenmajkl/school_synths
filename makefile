@@ -1,15 +1,16 @@
 NAME=synths
 AUTHOR=KripacMichal
+
 SRC=src
 OBJ=obj
 ZIP=$(AUTHOR)-$(NAME).zip
+OBJFILES=actions.o comparing.o fields.o helpers.o lists.o main.o
 
 CC=gcc
 CFLAGS=-std=c99 -Wall -pedantic -Wextra -g
 
-OBJFILES=actions.o comparing.o fields.o helpers.o lists.o main.o
 
-.PHONY: all run clean submit
+.PHONY: all dep run clean submit push
 
 all: $(NAME)
 
@@ -42,3 +43,5 @@ push: clean
 	git add .
 	git commit -m $(M)
 	git push
+
+

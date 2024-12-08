@@ -1,1 +1,3 @@
 synths
+*.o
+obj
