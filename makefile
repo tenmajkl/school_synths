@@ -36,7 +36,7 @@ clean:
 submit: clean
 	zip $(AUTHOR)-$(NAME).zip *
 
-push:
+push: clean
 	git add .
 	git commit -m $(M)
 	git push
