@@ -2,6 +2,7 @@ NAME=synths
 AUTHOR=KripacMichal
 SRC=src
 OBJ=obj
+ZIP=$(AUTHOR)-$(NAME).zip
 
 CC=gcc
 CFLAGS=-std=c99 -Wall -pedantic -Wextra -g
@@ -30,11 +31,12 @@ run: $(NAME)
 	./$(NAME)
 
 clean:
+	rm -f $(ZIP)
 	rm -rf $(OBJ)
 	rm -f $(NAME) *.o
 
 submit: clean
-	zip $(AUTHOR)-$(NAME).zip *
+	zip $(ZIP) *
 
 push: clean
 	git add .
