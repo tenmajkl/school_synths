@@ -37,7 +37,7 @@ clean:
 	rm -f $(NAME) *.o
 
 submit: clean
-	zip $(ZIP) *
+	zip $(ZIP) * */*
 
 push: clean
 	git add .
